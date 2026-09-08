@@ -213,6 +213,29 @@
     .hero h1{font-size:38px;}
     .section{padding:60px 5%;}
   }
+
+  /* --- Предзаказ бара: уведомление об успешной покупке билета --- */
+  .nc-toast{
+    position:fixed; top:24px; left:50%;
+    transform:translateX(-50%) translateY(-24px);
+    display:flex; gap:14px; align-items:flex-start;
+    background:var(--card); border:1px solid var(--gold);
+    border-radius:10px; padding:16px 22px; z-index:200; max-width:92%;
+    box-shadow:0 20px 50px -14px rgba(0,0,0,0.75);
+    font-family:'Oswald', sans-serif; text-transform:uppercase; letter-spacing:0.06em;
+    font-size:14px; color:var(--text);
+    opacity:0; transition:opacity .3s ease, transform .3s ease;
+  }
+  .nc-toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  .nc-toast .ico{
+    flex-shrink:0; width:28px; height:28px; border-radius:50%;
+    background:linear-gradient(135deg, var(--gold-soft), var(--gold)); color:#141414;
+    display:flex; align-items:center; justify-content:center; font-size:16px;
+  }
+  .nc-toast small{
+    display:block; margin-top:4px; font-family:'Montserrat', sans-serif;
+    text-transform:none; letter-spacing:normal; font-size:12px; color:var(--muted);
+  }
 </style>
 </head>
 <body>
@@ -222,7 +245,7 @@
   <nav>
     <a href="#films">Афиша</a>
     <a href="#films">Расписание</a>
-    <a href="#films">Бар</a>
+    <a href="shop.html">Бар</a>
     <a href="#films">Контакты</a>
   </nav>
   <div class="location">📍 Минск: NOVA в ТРЦ Galaxy</div>
@@ -333,6 +356,68 @@
   </div>
   <div class="copyright">© 2026 NOVA CINEMA. Все права защищены.</div>
 </footer>
+
+<script>
+/* Предзаказ бара NOVA — обработка кнопок «Купить билет».
+   Оплата билета имитируется (демо): показываем уведомление об успешной покупке
+   и переходим в приложение выбора товаров бара. Онлайн-оплаты нет. */
+(function () {
+  var REDIRECT_DELAY = 1500;
+
+  function normalize(s) { return (s || "").replace(/\s+/g, " ").trim(); }
+
+  function filmFor(link) {
+    var card = link.closest(".card");
+    if (card) {
+      var t = card.querySelector(".poster-title");
+      if (t) return normalize(t.textContent);
+    }
+    var h1 = document.querySelector(".hero h1");
+    // hero title uses <br>, so strip tags to keep the word break as a space
+    return h1 ? normalize(h1.innerHTML.replace(/<[^>]+>/g, " ")) : "";
+  }
+
+  function showToast(film) {
+    var wrap = document.createElement("div");
+    wrap.className = "nc-toast";
+    var msg = document.createElement("div");
+    msg.innerHTML =
+      "Покупка совершена успешно" +
+      (film ? " · «" + film + "»" : "") +
+      "<small>Билет оформлен. Открываем предзаказ бара — оплата на кассе выдачи…</small>";
+    var ico = document.createElement("span");
+    ico.className = "ico";
+    ico.textContent = "✓";
+    wrap.appendChild(ico);
+    wrap.appendChild(msg);
+    document.body.appendChild(wrap);
+    requestAnimationFrame(function () { wrap.classList.add("show"); });
+  }
+
+  var links = Array.prototype.slice.call(document.querySelectorAll("a.btn"));
+  links.filter(function (a) { return /купить\s+билет/i.test(a.textContent); })
+    .forEach(function (a) {
+      a.addEventListener("click", function (e) {
+        e.preventDefault();
+        if (a.dataset.ncBusy) return;
+        a.dataset.ncBusy = "1";
+
+        var film = filmFor(a);
+        try {
+          localStorage.setItem("nova_ticket", JSON.stringify({
+            film: film,
+            purchasedAt: new Date().toISOString()
+          }));
+        } catch (err) {}
+
+        showToast(film);
+        setTimeout(function () {
+          window.location.href = "shop.html?film=" + encodeURIComponent(film);
+        }, REDIRECT_DELAY);
+      });
+    });
+})();
+</script>
 
 </body>
 </html>

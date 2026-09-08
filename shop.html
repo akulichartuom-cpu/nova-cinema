@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NOVA CINEMA — Предзаказ бара</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b0d12; --bg-soft:#12151c; --card:#171a22;
+    --gold:#d4af37; --gold-soft:#e8c766;
+    --text:#f1f0ec; --muted:#9a9ba3;
+    --border:rgba(212,175,55,0.18);
+    --ok:#5bbf8a;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:'Montserrat', sans-serif; line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.logo,.btn,.eyebrow{
+    font-family:'Oswald', sans-serif; text-transform:uppercase; letter-spacing:0.06em;
+  }
+  a{color:inherit; text-decoration:none;}
+
+  header{
+    position:sticky; top:0; z-index:50;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 5%;
+    background:rgba(11,13,18,0.92); backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--border);
+  }
+  .logo{
+    font-size:24px; font-weight:700; color:var(--text);
+    display:flex; flex-direction:column; line-height:1;
+  }
+  .logo span{
+    font-size:10px; font-weight:400; letter-spacing:0.4em;
+    color:var(--gold); margin-top:4px;
+  }
+  .back{
+    font-size:13px; color:var(--muted); font-family:'Montserrat';
+    display:flex; align-items:center; gap:7px; transition:color .2s;
+  }
+  .back:hover{color:var(--gold-soft);}
+
+  .wrap{max-width:1140px; margin:0 auto; padding:44px 5% 90px;}
+
+  .intro{margin-bottom:36px;}
+  .eyebrow{
+    font-size:12px; color:var(--gold); letter-spacing:0.16em; margin-bottom:12px;
+  }
+  .intro h1{font-size:34px; font-weight:700; margin-bottom:10px;}
+  .intro p{color:var(--muted); font-size:15px; max-width:560px;}
+  .ticket-line{
+    margin-top:16px; display:inline-flex; align-items:center; gap:9px;
+    font-size:13px; color:var(--muted);
+    border:1px solid var(--border); border-radius:100px; padding:7px 15px;
+  }
+  .ticket-line b{color:var(--text); font-weight:600;}
+
+  .layout{
+    display:grid; grid-template-columns:1fr 360px; gap:34px; align-items:start;
+  }
+
+  /* Menu */
+  .menu{display:flex; flex-direction:column; gap:14px;}
+  .prod{
+    display:grid; grid-template-columns:64px 1fr auto; gap:18px; align-items:center;
+    background:var(--card); border:1px solid var(--border); border-radius:10px;
+    padding:16px 18px;
+  }
+  .prod .ic{
+    width:64px; height:64px; border-radius:10px; font-size:30px;
+    display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(155deg,#2a2140,#0b0d12 78%);
+  }
+  .prod h3{font-size:16px; font-weight:600; margin-bottom:3px;}
+  .prod .desc{font-size:12.5px; color:var(--muted); text-transform:none; letter-spacing:normal;}
+  .prod .price{
+    font-family:'Oswald'; font-size:15px; color:var(--gold-soft); margin-top:6px;
+  }
+  .prod .prep{color:var(--muted); font-size:11px; margin-left:10px;}
+
+  .stepper{display:flex; align-items:center; gap:10px;}
+  .stepper button{
+    width:34px; height:34px; border-radius:8px; cursor:pointer;
+    background:var(--bg-soft); color:var(--text);
+    border:1px solid var(--border); font-size:18px; line-height:1;
+    display:flex; align-items:center; justify-content:center;
+    transition:border-color .15s, color .15s;
+  }
+  .stepper button:hover{border-color:var(--gold); color:var(--gold-soft);}
+  .stepper .qty{min-width:22px; text-align:center; font-family:'Oswald'; font-size:16px;}
+
+  /* Cart */
+  .cart{
+    background:var(--card); border:1px solid var(--border); border-radius:12px;
+    padding:22px 20px; position:sticky; top:96px;
+  }
+  .cart h2{font-size:18px; font-weight:600; margin-bottom:6px;}
+  .cap{
+    display:inline-flex; align-items:center; gap:7px; font-size:11px; color:var(--ok);
+    text-transform:uppercase; letter-spacing:0.08em; font-family:'Oswald'; margin-bottom:16px;
+  }
+  .cap::before{content:""; width:7px; height:7px; border-radius:50%; background:var(--ok);}
+
+  #cartItems{display:flex; flex-direction:column; gap:10px; margin-bottom:16px;}
+  .ci{display:flex; justify-content:space-between; gap:10px; font-size:13px;}
+  .ci .n{color:var(--text);}
+  .ci .m{color:var(--muted); text-transform:none;}
+  .empty{color:var(--muted); font-size:13px; padding:10px 0;}
+
+  .slot label{
+    display:block; font-family:'Oswald'; text-transform:uppercase; letter-spacing:0.06em;
+    font-size:12px; color:var(--muted); margin-bottom:9px;
+  }
+  .slots{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px;}
+  .slots .s{
+    border:1px solid var(--border); border-radius:8px; padding:8px 12px;
+    font-size:13px; cursor:pointer; color:var(--muted); font-family:'Oswald';
+    transition:.15s;
+  }
+  .slots .s.active{border-color:var(--gold); color:var(--text); background:rgba(212,175,55,0.08);}
+
+  .totals{border-top:1px solid var(--border); padding-top:14px; margin-bottom:16px;}
+  .totals .row{display:flex; justify-content:space-between; font-size:13px; color:var(--muted); margin-bottom:6px;}
+  .totals .row.grand{
+    color:var(--text); font-family:'Oswald'; font-size:17px; text-transform:uppercase;
+    margin-top:8px;
+  }
+  .totals .row.grand b{color:var(--gold-soft);}
+
+  .btn{
+    display:flex; align-items:center; justify-content:center; gap:8px; width:100%;
+    padding:14px 22px; font-size:13px; font-weight:600; border-radius:6px;
+    cursor:pointer; border:1px solid transparent;
+    background:linear-gradient(135deg, var(--gold-soft), var(--gold)); color:#141414;
+    transition:transform .15s, box-shadow .15s, opacity .15s;
+  }
+  .btn:hover{transform:translateY(-2px); box-shadow:0 12px 28px -10px rgba(212,175,55,0.7);}
+  .btn:disabled{opacity:.4; cursor:not-allowed; transform:none; box-shadow:none;}
+  .btn.ghost{background:transparent; color:var(--text); border-color:rgba(255,255,255,0.22);}
+  .btn.ghost:hover{border-color:var(--gold); color:var(--gold-soft); box-shadow:none;}
+
+  .fineprint{font-size:11.5px; color:var(--muted); text-align:center; margin-top:10px; text-transform:none;}
+
+  /* Order confirmation */
+  #orderView{max-width:520px; margin:0 auto;}
+  .order-card{
+    background:var(--card); border:1px solid var(--gold); border-radius:14px;
+    padding:32px 28px; text-align:center;
+  }
+  .order-card .ok{
+    font-family:'Oswald'; text-transform:uppercase; letter-spacing:0.08em;
+    color:var(--ok); font-size:15px; margin-bottom:6px;
+  }
+  .order-card .ord-no{font-family:'Oswald'; font-size:26px; margin-bottom:22px;}
+  .order-card .ord-no b{color:var(--gold-soft);}
+  #qrbox{
+    width:200px; height:200px; margin:0 auto 8px; background:#fff; border-radius:10px;
+    padding:12px; display:flex; align-items:center; justify-content:center;
+  }
+  #qrbox img, #qrbox canvas{width:100%; height:100%;}
+  #qrbox .qrfallback{
+    font-family:'Courier New', monospace; font-size:10px; color:#0b0d12;
+    word-break:break-all; line-height:1.35;
+  }
+  .qr-hint{font-size:12.5px; color:var(--muted); margin:10px 0 20px;}
+  .ord-list{
+    text-align:left; border-top:1px solid var(--border); border-bottom:1px solid var(--border);
+    padding:14px 0; margin-bottom:16px; display:flex; flex-direction:column; gap:8px;
+  }
+  .ord-list .ci{font-size:13px;}
+  .ord-total{font-family:'Oswald'; font-size:18px; text-transform:uppercase; margin-bottom:6px;}
+  .ord-total b{color:var(--gold-soft);}
+  .ord-meta{font-size:12.5px; color:var(--muted); margin-bottom:22px;}
+  .ord-meta .status{color:var(--gold-soft);}
+  .pay-note{
+    font-size:12px; color:var(--muted); background:var(--bg-soft);
+    border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin-bottom:20px;
+  }
+
+  @media (max-width:860px){
+    .layout{grid-template-columns:1fr;}
+    .cart{position:static;}
+  }
+  @media (max-width:520px){
+    .prod{grid-template-columns:52px 1fr; grid-template-areas:"ic body" "step step"; row-gap:12px;}
+    .prod .ic{width:52px; height:52px; font-size:24px; grid-area:ic;}
+    .prod .body{grid-area:body;}
+    .stepper{grid-area:step; justify-content:flex-end;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="index.html">← В афишу</a>
+  <div class="logo">NOVA<span>CINEMA</span></div>
+  <span style="width:70px"></span>
+</header>
+
+<div class="wrap">
+
+  <!-- CATALOG -->
+  <div id="catalogView">
+    <div class="intro">
+      <div class="eyebrow">Предзаказ бара · онлайн</div>
+      <h1>Соберите заказ заранее</h1>
+      <p>Выберите товары, укажите время получения и оформите предзаказ. Оплата — картой или наличными на кассе выдачи предзаказов. Онлайн-оплата не требуется.</p>
+      <div class="ticket-line" id="ticketLine">🎟 Билет не найден — оформите на афише</div>
+    </div>
+
+    <div class="layout">
+      <div class="menu" id="menu"><!-- products injected --></div>
+
+      <aside class="cart">
+        <h2>Ваш заказ</h2>
+        <div class="cap">Касса выдачи · свободно</div>
+
+        <div id="cartItems"><div class="empty">Пока пусто. Добавьте товары из меню.</div></div>
+
+        <div class="slot">
+          <label>Время получения</label>
+          <div class="slots" id="slots"></div>
+        </div>
+
+        <div class="totals">
+          <div class="row"><span>Позиций</span><span id="tCount">0</span></div>
+          <div class="row"><span>Время сборки</span><span id="tPrep">≈ 0 мин</span></div>
+          <div class="row grand"><span>К оплате на кассе</span><b id="tTotal">0.00 BYN</b></div>
+        </div>
+
+        <button class="btn" id="placeBtn" disabled>Оформить предзаказ</button>
+        <div class="fineprint">Ничего не спишется онлайн. Оплата при получении на кассе выдачи предзаказов NOVA.</div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- CONFIRMATION -->
+  <div id="orderView" hidden>
+    <div class="order-card">
+      <div class="ok">✓ Предзаказ оформлен</div>
+      <div class="ord-no">Заказ <b id="ordNo">—</b></div>
+
+      <div id="qrbox"></div>
+      <div class="qr-hint">Покажите этот QR-код оператору на кассе выдачи предзаказов.</div>
+
+      <div class="ord-list" id="ordList"></div>
+      <div class="ord-total">К оплате на кассе: <b id="ordTotal">—</b></div>
+      <div class="ord-meta">Время получения: <b id="ordSlot">—</b> · Статус: <span class="status">Готовим</span></div>
+
+      <div class="pay-note">Оплата картой или наличными при получении. Возврат билета в кассе кинотеатра автоматически отменяет этот предзаказ.</div>
+
+      <button class="btn ghost" id="newOrderBtn">Новый предзаказ</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  // --- Тестовый каталог бара ---
+  var PRODUCTS = [
+    { id: "cola-05",     name: "Кола 0.5",         desc: "Газированный напиток, 0.5 л", price: 4.50, prep: 1, icon: "🥤" },
+    { id: "popcorn-caramel", name: "Попкорн карамель", desc: "Средний стакан, 1.5 л",     price: 7.00, prep: 2, icon: "🍿" },
+    { id: "popcorn-cheese",  name: "Попкорн сыр",      desc: "Средний стакан, 1.5 л",     price: 7.50, prep: 2, icon: "🧀" },
+    { id: "nachos",      name: "Начос",            desc: "Кукурузные чипсы + сырный соус", price: 9.00, prep: 3, icon: "🌽" }
+  ];
+  var CURRENCY = "BYN";
+  var ORDER_KEY = "nova_preorder";
+  var TICKET_KEY = "nova_ticket";
+
+  var cart = {};        // id -> qty
+  var slot = null;
+  var byId = {};
+  PRODUCTS.forEach(function (p) { byId[p.id] = p; });
+
+  var $ = function (s) { return document.querySelector(s); };
+  var money = function (n) { return n.toFixed(2) + " " + CURRENCY; };
+
+  // --- Билет из афиши ---
+  function readTicket() {
+    var film = new URLSearchParams(location.search).get("film") || "";
+    if (!film) {
+      try {
+        var t = JSON.parse(localStorage.getItem(TICKET_KEY) || "null");
+        if (t && t.film) film = t.film;
+      } catch (e) {}
+    }
+    var el = $("#ticketLine");
+    if (film) {
+      el.innerHTML = "🎟 Билет: <b>«" + film + "»</b>";
+    } else {
+      el.textContent = "🎟 Билет не найден — предзаказ в демо-режиме";
+    }
+  }
+
+  // --- Слоты получения ---
+  function buildSlots() {
+    var box = $("#slots");
+    box.innerHTML = "";
+    var now = new Date();
+    var start = new Date(Math.ceil(now.getTime() / (5 * 60000)) * (5 * 60000) + 15 * 60000);
+    for (var i = 0; i < 4; i++) {
+      var d = new Date(start.getTime() + i * 10 * 60000);
+      var label = ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
+      var b = document.createElement("div");
+      b.className = "s" + (i === 0 ? " active" : "");
+      b.textContent = label;
+      b.dataset.slot = label;
+      b.addEventListener("click", function () {
+        box.querySelectorAll(".s").forEach(function (x) { x.classList.remove("active"); });
+        this.classList.add("active");
+        slot = this.dataset.slot;
+        renderCart();
+      });
+      box.appendChild(b);
+    }
+    slot = box.querySelector(".s.active").dataset.slot;
+  }
+
+  // --- Меню ---
+  function renderMenu() {
+    var menu = $("#menu");
+    menu.innerHTML = "";
+    PRODUCTS.forEach(function (p) {
+      var el = document.createElement("article");
+      el.className = "prod";
+      el.innerHTML =
+        '<div class="ic">' + p.icon + '</div>' +
+        '<div class="body">' +
+          '<h3>' + p.name + '</h3>' +
+          '<div class="desc">' + p.desc + '</div>' +
+          '<div class="price">' + money(p.price) +
+            '<span class="prep">≈ ' + p.prep + ' мин</span></div>' +
+        '</div>' +
+        '<div class="stepper" data-id="' + p.id + '">' +
+          '<button type="button" data-d="-1" aria-label="Убрать">−</button>' +
+          '<span class="qty">0</span>' +
+          '<button type="button" data-d="1" aria-label="Добавить">+</button>' +
+        '</div>';
+      menu.appendChild(el);
+    });
+    menu.querySelectorAll(".stepper button").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = this.parentNode.dataset.id;
+        var d = parseInt(this.dataset.d, 10);
+        cart[id] = Math.max(0, (cart[id] || 0) + d);
+        if (cart[id] === 0) delete cart[id];
+        this.parentNode.querySelector(".qty").textContent = cart[id] || 0;
+        renderCart();
+      });
+    });
+  }
+
+  // --- Корзина ---
+  function cartLines() {
+    return Object.keys(cart).map(function (id) {
+      var p = byId[id], qty = cart[id];
+      return { p: p, qty: qty, sum: p.price * qty };
+    });
+  }
+
+  function renderCart() {
+    var lines = cartLines();
+    var box = $("#cartItems");
+    if (!lines.length) {
+      box.innerHTML = '<div class="empty">Пока пусто. Добавьте товары из меню.</div>';
+    } else {
+      box.innerHTML = lines.map(function (l) {
+        return '<div class="ci"><span class="n">' + l.p.name + ' × ' + l.qty +
+               '</span><span class="m">' + money(l.sum) + '</span></div>';
+      }).join("");
+    }
+    var count = lines.reduce(function (a, l) { return a + l.qty; }, 0);
+    var total = lines.reduce(function (a, l) { return a + l.sum; }, 0);
+    var prep = lines.reduce(function (a, l) { return a + l.p.prep * l.qty; }, 0);
+    $("#tCount").textContent = count;
+    $("#tPrep").textContent = "≈ " + prep + " мин";
+    $("#tTotal").textContent = money(total);
+    $("#placeBtn").disabled = count === 0 || !slot;
+  }
+
+  // --- Оформление ---
+  function placeOrder() {
+    var lines = cartLines();
+    if (!lines.length || !slot) return;
+    var total = lines.reduce(function (a, l) { return a + l.sum; }, 0);
+    var order = {
+      no: "NC-" + (1000 + Math.floor(Math.random() * 9000)),
+      createdAt: new Date().toISOString(),
+      slot: slot,
+      film: (new URLSearchParams(location.search).get("film")) || "",
+      pay: "onsite",
+      currency: CURRENCY,
+      total: total,
+      items: lines.map(function (l) {
+        return { id: l.p.id, name: l.p.name, qty: l.qty, price: l.p.price };
+      })
+    };
+    try { localStorage.setItem(ORDER_KEY, JSON.stringify(order)); } catch (e) {}
+    showOrder(order);
+  }
+
+  function qrPayload(o) {
+    return "NOVA|PREORDER|" + o.no +
+      "|SLOT:" + o.slot +
+      "|PAY:ONSITE" +
+      "|SUM:" + o.total.toFixed(2) + o.currency +
+      "|ITEMS:" + o.items.map(function (i) { return i.id + "x" + i.qty; }).join(",");
+  }
+
+  function showOrder(o) {
+    $("#catalogView").hidden = true;
+    $("#orderView").hidden = false;
+    $("#ordNo").textContent = o.no;
+    $("#ordSlot").textContent = o.slot;
+    $("#ordTotal").textContent = money(o.total);
+    $("#ordList").innerHTML = o.items.map(function (i) {
+      return '<div class="ci"><span class="n">' + i.name + ' × ' + i.qty +
+             '</span><span class="m">' + money(i.price * i.qty) + '</span></div>';
+    }).join("");
+
+    var box = $("#qrbox");
+    box.innerHTML = "";
+    var payload = qrPayload(o);
+    if (window.QRCode) {
+      try {
+        new QRCode(box, {
+          text: payload, width: 176, height: 176,
+          colorDark: "#0b0d12", colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      } catch (e) {
+        box.innerHTML = '<div class="qrfallback">' + payload + '</div>';
+      }
+    } else {
+      box.innerHTML = '<div class="qrfallback">' + payload + '</div>';
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function resetOrder() {
+    try { localStorage.removeItem(ORDER_KEY); } catch (e) {}
+    cart = {};
+    $("#orderView").hidden = true;
+    $("#catalogView").hidden = false;
+    renderMenu();
+    buildSlots();
+    renderCart();
+  }
+
+  // --- Init ---
+  readTicket();
+  renderMenu();
+  buildSlots();
+  renderCart();
+  $("#placeBtn").addEventListener("click", placeOrder);
+  $("#newOrderBtn").addEventListener("click", resetOrder);
+
+  // Показать существующий предзаказ (не старше 6 часов)
+  try {
+    var saved = JSON.parse(localStorage.getItem(ORDER_KEY) || "null");
+    if (saved && saved.no && (Date.now() - new Date(saved.createdAt).getTime()) < 6 * 3600 * 1000) {
+      showOrder(saved);
+    }
+  } catch (e) {}
+})();
+</script>
+
+</body>
+</html>
