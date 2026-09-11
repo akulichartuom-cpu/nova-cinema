@@ -1,0 +1,23 @@
+{
+  "products": [
+    { "id": "cola-05", "name": "Кола 0.5", "desc": "Газированный напиток, 0.5 л", "price": 4.5, "prep": 1, "icon": "🥤", "available": true },
+    { "id": "popcorn-caramel", "name": "Попкорн карамель", "desc": "Средний стакан, 1.5 л", "price": 7, "prep": 2, "icon": "🍿", "available": true },
+    { "id": "popcorn-cheese", "name": "Попкорн сыр", "desc": "Средний стакан, 1.5 л", "price": 7.5, "prep": 2, "icon": "🧀", "available": true },
+    { "id": "nachos", "name": "Начос", "desc": "Кукурузные чипсы + сырный соус", "price": 9, "prep": 3, "icon": "🌽", "available": true }
+  ],
+  "combos": [
+    {
+      "id": "combo-classic",
+      "name": "Комбо «Классика»",
+      "icon": "🎬",
+      "items": [
+        { "id": "popcorn-caramel", "qty": 1 },
+        { "id": "cola-05", "qty": 1 }
+      ],
+      "discountType": "amount",
+      "discountValue": 2,
+      "available": true
+    }
+  ],
+  "updatedAt": "2026-09-11T00:00:00.000Z"
+}

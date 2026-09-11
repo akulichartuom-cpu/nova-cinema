@@ -47,7 +47,7 @@
   }
   .back:hover{color:var(--gold-soft);}
 
-  .wrap{max-width:1140px; margin:0 auto; padding:44px 5% 90px;}
+  .wrap{max-width:1140px; margin:0 auto; padding:44px 5% 40px;}
 
   .intro{margin-bottom:36px;}
   .eyebrow{
@@ -68,22 +68,45 @@
 
   /* Menu */
   .menu{display:flex; flex-direction:column; gap:14px;}
+  .section-label{
+    font-size:12px; color:var(--muted); letter-spacing:0.1em; margin:6px 0 -2px;
+  }
+  .section-label:first-child{margin-top:0;}
+
   .prod{
     display:grid; grid-template-columns:64px 1fr auto; gap:18px; align-items:center;
     background:var(--card); border:1px solid var(--border); border-radius:10px;
     padding:16px 18px;
+  }
+  .prod.combo{
+    border-color:rgba(212,175,55,0.45);
+    background:linear-gradient(180deg, rgba(212,175,55,0.07), var(--card) 65%);
   }
   .prod .ic{
     width:64px; height:64px; border-radius:10px; font-size:30px;
     display:flex; align-items:center; justify-content:center;
     background:linear-gradient(155deg,#2a2140,#0b0d12 78%);
   }
-  .prod h3{font-size:16px; font-weight:600; margin-bottom:3px;}
+  .prod.combo .ic{background:linear-gradient(155deg,#4a3414,#0b0d12 78%);}
+  .prod h3{font-size:16px; font-weight:600; margin-bottom:3px; display:flex; align-items:center; flex-wrap:wrap; gap:8px;}
+  .badge-combo{
+    font-family:'Oswald'; font-size:9px; padding:3px 8px; border-radius:100px;
+    background:rgba(212,175,55,0.16); color:var(--gold-soft); letter-spacing:0.08em;
+  }
   .prod .desc{font-size:12.5px; color:var(--muted); text-transform:none; letter-spacing:normal;}
   .prod .price{
     font-family:'Oswald'; font-size:15px; color:var(--gold-soft); margin-top:6px;
+    display:flex; align-items:baseline; flex-wrap:wrap; gap:2px 8px;
   }
-  .prod .prep{color:var(--muted); font-size:11px; margin-left:10px;}
+  .prod .price .strike{
+    font-family:'Montserrat'; text-transform:none; letter-spacing:normal;
+    font-size:12.5px; color:var(--muted); text-decoration:line-through;
+  }
+  .prod .price .save{
+    font-family:'Montserrat'; text-transform:none; letter-spacing:normal;
+    font-size:11.5px; color:var(--ok);
+  }
+  .prod .prep{color:var(--muted); font-size:11px;}
 
   .stepper{display:flex; align-items:center; gap:10px;}
   .stepper button{
@@ -95,6 +118,8 @@
   }
   .stepper button:hover{border-color:var(--gold); color:var(--gold-soft);}
   .stepper .qty{min-width:22px; text-align:center; font-family:'Oswald'; font-size:16px;}
+
+  .empty-menu{color:var(--muted); font-size:13px; padding:20px; border:1px dashed var(--border); border-radius:10px; text-align:center;}
 
   /* Cart */
   .cart{
@@ -184,6 +209,10 @@
     border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin-bottom:20px;
   }
 
+  .staff-link{text-align:center; padding:6px 5% 36px;}
+  .staff-link a{font-size:11px; color:var(--muted); opacity:.55; transition:opacity .15s;}
+  .staff-link a:hover{opacity:1; color:var(--gold-soft);}
+
   @media (max-width:860px){
     .layout{grid-template-columns:1fr;}
     .cart{position:static;}
@@ -216,7 +245,7 @@
     </div>
 
     <div class="layout">
-      <div class="menu" id="menu"><!-- products injected --></div>
+      <div class="menu" id="menu"><!-- products/combos injected --></div>
 
       <aside class="cart">
         <h2>Ваш заказ</h2>
@@ -262,29 +291,25 @@
 
 </div>
 
+<div class="staff-link"><a href="admin.html">Наполнение каталога</a> · <a href="operator.html">Касса выдачи</a> <span style="opacity:.6">— для персонала</span></div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="catalog.js"></script>
 <script>
-(function () {
+(async function () {
   "use strict";
 
-  // --- Тестовый каталог бара ---
-  var PRODUCTS = [
-    { id: "cola-05",     name: "Кола 0.5",         desc: "Газированный напиток, 0.5 л", price: 4.50, prep: 1, icon: "🥤" },
-    { id: "popcorn-caramel", name: "Попкорн карамель", desc: "Средний стакан, 1.5 л",     price: 7.00, prep: 2, icon: "🍿" },
-    { id: "popcorn-cheese",  name: "Попкорн сыр",      desc: "Средний стакан, 1.5 л",     price: 7.50, prep: 2, icon: "🧀" },
-    { id: "nachos",      name: "Начос",            desc: "Кукурузные чипсы + сырный соус", price: 9.00, prep: 3, icon: "🌽" }
-  ];
   var CURRENCY = "BYN";
   var ORDER_KEY = "nova_preorder";
   var TICKET_KEY = "nova_ticket";
 
-  var cart = {};        // id -> qty
+  var cart = {};   // id -> qty (id может быть товаром ИЛИ комбо)
   var slot = null;
-  var byId = {};
-  PRODUCTS.forEach(function (p) { byId[p.id] = p; });
+  var byId = {};   // все товары и комбо (включая скрытые — нужны для восстановления старого заказа)
+  var visibleItems = []; // то, что реально показываем в меню, в порядке отображения
 
   var $ = function (s) { return document.querySelector(s); };
-  var money = function (n) { return n.toFixed(2) + " " + CURRENCY; };
+  var money = function (n) { return NovaCatalog.money(n, CURRENCY); };
 
   // --- Билет из афиши ---
   function readTicket() {
@@ -327,28 +352,62 @@
     slot = box.querySelector(".s.active").dataset.slot;
   }
 
-  // --- Меню ---
+  // --- Меню: сначала видимые комбо, затем товары в наличии ---
+  function productCardHtml(p) {
+    return (
+      '<div class="ic">' + p.icon + '</div>' +
+      '<div class="body">' +
+        '<h3>' + p.name + '</h3>' +
+        '<div class="desc">' + p.desc + '</div>' +
+        '<div class="price">' + money(p.price) +
+          '<span class="prep">≈ ' + p.prep + ' мин</span></div>' +
+      '</div>'
+    );
+  }
+
+  function comboCardHtml(c) {
+    var save = c.discountAmount > 0
+      ? '<span class="save">−' + money(c.discountAmount) + '</span>'
+      : '';
+    return (
+      '<div class="ic">' + (c.icon || "🎬") + '</div>' +
+      '<div class="body">' +
+        '<h3>' + c.name + '<span class="badge-combo">Комбо</span></h3>' +
+        '<div class="desc">' + c.composition + '</div>' +
+        '<div class="price"><span class="strike">' + money(c.baseSum) + '</span>' + money(c.price) +
+          save + '<span class="prep">≈ ' + c.prep + ' мин</span></div>' +
+      '</div>'
+    );
+  }
+
   function renderMenu() {
     var menu = $("#menu");
     menu.innerHTML = "";
-    PRODUCTS.forEach(function (p) {
-      var el = document.createElement("article");
-      el.className = "prod";
-      el.innerHTML =
-        '<div class="ic">' + p.icon + '</div>' +
-        '<div class="body">' +
-          '<h3>' + p.name + '</h3>' +
-          '<div class="desc">' + p.desc + '</div>' +
-          '<div class="price">' + money(p.price) +
-            '<span class="prep">≈ ' + p.prep + ' мин</span></div>' +
-        '</div>' +
-        '<div class="stepper" data-id="' + p.id + '">' +
-          '<button type="button" data-d="-1" aria-label="Убрать">−</button>' +
-          '<span class="qty">0</span>' +
-          '<button type="button" data-d="1" aria-label="Добавить">+</button>' +
-        '</div>';
-      menu.appendChild(el);
-    });
+    visibleItems = [];
+
+    var combos = byId.__catalog.combos.filter(function (c) { return c.effectiveAvailable; });
+    var products = byId.__catalog.products.filter(function (p) { return p.available !== false; });
+
+    if (!combos.length && !products.length) {
+      menu.innerHTML = '<div class="empty-menu">Каталог пуст — все позиции сейчас скрыты. Загляните позже.</div>';
+      return;
+    }
+
+    if (combos.length) {
+      var l1 = document.createElement("div");
+      l1.className = "section-label";
+      l1.textContent = "Комбо";
+      menu.appendChild(l1);
+      combos.forEach(function (c) { menu.appendChild(buildCard(c, "combo")); });
+    }
+    if (products.length) {
+      var l2 = document.createElement("div");
+      l2.className = "section-label";
+      l2.textContent = "Меню";
+      menu.appendChild(l2);
+      products.forEach(function (p) { menu.appendChild(buildCard(p, "product")); });
+    }
+
     menu.querySelectorAll(".stepper button").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var id = this.parentNode.dataset.id;
@@ -361,12 +420,26 @@
     });
   }
 
+  function buildCard(item, kind) {
+    visibleItems.push(item);
+    var el = document.createElement("article");
+    el.className = "prod" + (kind === "combo" ? " combo" : "");
+    el.innerHTML =
+      (kind === "combo" ? comboCardHtml(item) : productCardHtml(item)) +
+      '<div class="stepper" data-id="' + item.id + '">' +
+        '<button type="button" data-d="-1" aria-label="Убрать">−</button>' +
+        '<span class="qty">' + (cart[item.id] || 0) + '</span>' +
+        '<button type="button" data-d="1" aria-label="Добавить">+</button>' +
+      '</div>';
+    return el;
+  }
+
   // --- Корзина ---
   function cartLines() {
     return Object.keys(cart).map(function (id) {
-      var p = byId[id], qty = cart[id];
-      return { p: p, qty: qty, sum: p.price * qty };
-    });
+      var item = byId[id], qty = cart[id];
+      return { item: item, qty: qty, sum: item.price * qty };
+    }).filter(function (l) { return !!l.item; });
   }
 
   function renderCart() {
@@ -376,13 +449,13 @@
       box.innerHTML = '<div class="empty">Пока пусто. Добавьте товары из меню.</div>';
     } else {
       box.innerHTML = lines.map(function (l) {
-        return '<div class="ci"><span class="n">' + l.p.name + ' × ' + l.qty +
+        return '<div class="ci"><span class="n">' + l.item.name + ' × ' + l.qty +
                '</span><span class="m">' + money(l.sum) + '</span></div>';
       }).join("");
     }
     var count = lines.reduce(function (a, l) { return a + l.qty; }, 0);
     var total = lines.reduce(function (a, l) { return a + l.sum; }, 0);
-    var prep = lines.reduce(function (a, l) { return a + l.p.prep * l.qty; }, 0);
+    var prep = lines.reduce(function (a, l) { return a + l.item.prep * l.qty; }, 0);
     $("#tCount").textContent = count;
     $("#tPrep").textContent = "≈ " + prep + " мин";
     $("#tTotal").textContent = money(total);
@@ -403,7 +476,7 @@
       currency: CURRENCY,
       total: total,
       items: lines.map(function (l) {
-        return { id: l.p.id, name: l.p.name, qty: l.qty, price: l.p.price };
+        return { id: l.item.id, name: l.item.name, qty: l.qty, price: l.item.price };
       })
     };
     try { localStorage.setItem(ORDER_KEY, JSON.stringify(order)); } catch (e) {}
@@ -459,6 +532,11 @@
   }
 
   // --- Init ---
+  var catalog = await NovaCatalog.loadCatalog();
+  byId = { __catalog: catalog };
+  catalog.products.forEach(function (p) { byId[p.id] = p; });
+  catalog.combos.forEach(function (c) { byId[c.id] = c; });
+
   readTicket();
   renderMenu();
   buildSlots();

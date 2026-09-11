@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>NOVA CINEMA — Касса выдачи</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b0d12; --bg-soft:#12151c; --card:#171a22;
+    --gold:#d4af37; --gold-soft:#e8c766;
+    --text:#f1f0ec; --muted:#9a9ba3;
+    --border:rgba(212,175,55,0.18);
+    --ok:#5bbf8a; --bad:#a93a2c; --bad-soft:#e08a7c;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:'Montserrat', sans-serif; line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,.logo,.btn,.eyebrow{font-family:'Oswald', sans-serif; text-transform:uppercase; letter-spacing:0.06em;}
+  a{color:inherit; text-decoration:none;}
+
+  header{
+    position:sticky; top:0; z-index:50;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 5%;
+    background:rgba(11,13,18,0.92); backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--border);
+  }
+  .logo{font-size:24px; font-weight:700; color:var(--text); display:flex; flex-direction:column; line-height:1;}
+  .logo span{font-size:10px; font-weight:400; letter-spacing:0.4em; color:var(--gold); margin-top:4px;}
+  .back{font-size:13px; color:var(--muted); display:flex; align-items:center; gap:7px; transition:color .2s;}
+  .back:hover{color:var(--gold-soft);}
+  .hdr-links{display:flex; align-items:center; gap:18px;}
+  .hdr-links a{font-size:13px; color:var(--muted); transition:color .2s; cursor:pointer;}
+  .hdr-links a:hover{color:var(--gold-soft);}
+
+  .wrap{max-width:1140px; margin:0 auto; padding:44px 5% 90px;}
+
+  .eyebrow{font-size:12px; color:var(--gold); letter-spacing:0.16em; margin-bottom:12px;}
+  .intro h1{font-size:32px; font-weight:700; margin-bottom:10px;}
+  .intro p{color:var(--muted); font-size:14.5px; max-width:640px;}
+
+  .callout{
+    font-size:12.5px; color:var(--muted); background:var(--bg-soft);
+    border:1px solid var(--border); border-radius:8px; padding:12px 14px; margin:22px 0 34px; max-width:780px;
+  }
+  .callout b{color:var(--text);}
+
+  /* Scanner */
+  .scan-panel{
+    background:var(--card); border:1px solid var(--border); border-radius:12px;
+    padding:22px; margin-bottom:40px;
+    display:grid; grid-template-columns:300px 1fr; gap:26px;
+  }
+  .video-box{
+    position:relative; width:100%; aspect-ratio:4/3; background:#000;
+    border-radius:10px; overflow:hidden; border:1px solid var(--border);
+  }
+  .video-box video{width:100%; height:100%; object-fit:cover; display:block;}
+  .video-box .frame{
+    position:absolute; inset:13%; border:2px solid var(--gold); border-radius:10px; opacity:.65; pointer-events:none;
+  }
+  .video-box .placeholder{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    color:var(--muted); font-size:12px; text-align:center; padding:20px; background:var(--bg-soft);
+  }
+  .scan-toggle{margin-top:12px; width:100%;}
+
+  .manual{display:flex; flex-direction:column; gap:16px;}
+  .field-label{
+    font-family:'Oswald'; text-transform:uppercase; letter-spacing:0.05em; font-size:11.5px; color:var(--muted);
+    display:block; margin-bottom:7px;
+  }
+  .manual-row{display:flex; gap:10px;}
+  .manual-row input{
+    flex:1; font-family:'Courier New', monospace; font-size:12.5px;
+    background:var(--bg-soft); border:1px solid var(--border); border-radius:7px; padding:11px 12px; color:var(--text);
+  }
+  .manual-row input:focus{outline:none; border-color:var(--gold);}
+  .manual-actions{display:flex; gap:10px;}
+  #scanStatus{font-size:12.5px; color:var(--gold-soft); min-height:1.4em;}
+  .hint{font-size:11.5px; color:var(--muted);}
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:12px 20px; font-size:12.5px; font-weight:600; border-radius:6px;
+    cursor:pointer; border:1px solid transparent;
+    background:linear-gradient(135deg, var(--gold-soft), var(--gold)); color:#141414;
+    transition:transform .15s, box-shadow .15s;
+  }
+  .btn:hover{transform:translateY(-2px); box-shadow:0 12px 28px -10px rgba(212,175,55,0.7);}
+  .btn.ghost{background:transparent; color:var(--text); border-color:rgba(255,255,255,0.22);}
+  .btn.ghost:hover{border-color:var(--gold); color:var(--gold-soft); box-shadow:none;}
+  .btn.sm{padding:9px 14px; font-size:11.5px;}
+
+  /* Orders */
+  .section-head{
+    display:flex; align-items:center; justify-content:space-between; gap:14px;
+    margin:0 0 16px;
+  }
+  .section-head h2{font-size:18px; font-weight:600;}
+  .section-head .count{
+    font-family:'Montserrat'; text-transform:none; letter-spacing:normal; color:var(--muted); font-size:12.5px; margin-left:8px;
+  }
+  .orders-section{margin-bottom:40px;}
+  .orders-grid{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(270px, 1fr)); gap:14px;
+  }
+  .empty-menu{color:var(--muted); font-size:13px; padding:22px; border:1px dashed var(--border); border-radius:10px; text-align:center;}
+
+  .order-card{
+    background:var(--card); border:1px solid var(--border); border-radius:10px;
+    padding:16px 18px; display:flex; flex-direction:column; gap:10px;
+    transition:box-shadow .3s, border-color .3s;
+  }
+  .order-card.done{border-color:rgba(91,191,138,0.4);}
+  .order-card.flash{box-shadow:0 0 0 2px var(--gold); border-color:var(--gold);}
+  .oc-head{display:flex; justify-content:space-between; align-items:baseline; gap:10px;}
+  .oc-no{font-family:'Oswald'; font-size:18px; font-weight:700; color:var(--gold-soft);}
+  .oc-slot{font-family:'Oswald'; font-size:12.5px; color:var(--muted);}
+  .oc-chip{
+    align-self:flex-start; font-family:'Oswald'; font-size:9.5px; letter-spacing:0.07em;
+    padding:4px 10px; border-radius:100px; text-transform:uppercase;
+  }
+  .oc-chip.new{background:rgba(154,155,163,0.15); color:var(--muted);}
+  .oc-chip.partial{background:rgba(212,175,55,0.16); color:var(--gold-soft);}
+  .oc-chip.done{background:rgba(91,191,138,0.18); color:var(--ok);}
+  .oc-items{font-size:13px; color:var(--text); line-height:1.4;}
+  .oc-sum{font-family:'Oswald'; font-size:15px; color:var(--gold-soft);}
+  .oc-toggles{display:flex; gap:8px;}
+  .oc-btn{
+    flex:1; font-family:'Oswald'; font-size:11px; letter-spacing:0.03em; text-transform:uppercase;
+    padding:10px 6px; border-radius:7px; border:1px solid var(--border); background:var(--bg-soft);
+    color:var(--muted); cursor:pointer; text-align:center; transition:.15s;
+  }
+  .oc-btn:hover{border-color:var(--gold-soft);}
+  .oc-btn.on{background:rgba(91,191,138,0.16); border-color:var(--ok); color:var(--ok);}
+  .oc-foot{display:flex; justify-content:space-between; align-items:center; margin-top:2px;}
+  .oc-meta{font-size:10.5px; color:var(--muted);}
+  .oc-remove{font-size:10.5px; color:var(--muted); cursor:pointer; text-decoration:underline; text-underline-offset:2px;}
+  .oc-remove:hover{color:var(--bad-soft);}
+
+  @media (max-width:860px){
+    .scan-panel{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="shop.html">← В приложение</a>
+  <div class="logo">NOVA<span>CINEMA</span></div>
+  <div class="hdr-links"><a href="admin.html">Каталог →</a><a id="logoutLink">Выйти</a></div>
+</header>
+
+<div class="wrap">
+
+  <div class="intro">
+    <div class="eyebrow">Касса выдачи предзаказов · для персонала</div>
+    <h1>Выдача заказов</h1>
+    <p>Сканируйте QR-код гостя или вставьте его вручную. Когда заказ собран — отметьте «Заказ готов»; когда гость оплатил на кассе — «Заказ оплачен». Как только отмечены оба пункта, заказ уходит в «Выданы».</p>
+  </div>
+
+  <div class="callout">
+    <b>Как это работает.</b> Список заказов живёт в этом браузере/устройстве — заказ появляется здесь в момент, когда вы его отсканировали или вставили вручную. Это касса одной точки выдачи, а не общая база на все устройства.
+  </div>
+
+  <div class="scan-panel">
+    <div>
+      <div class="video-box">
+        <video id="video" muted playsinline></video>
+        <div class="frame"></div>
+        <div class="placeholder" id="camPlaceholder">Камера выключена</div>
+      </div>
+      <button class="btn scan-toggle" id="scanToggle">Включить камеру</button>
+    </div>
+
+    <div class="manual">
+      <div>
+        <span class="field-label">Вставить код QR вручную</span>
+        <div class="manual-row">
+          <input type="text" id="manualCode" placeholder="NOVA|PREORDER|NC-1234|SLOT:...|PAY:ONSITE|SUM:...|ITEMS:...">
+        </div>
+      </div>
+      <div class="manual-actions">
+        <button class="btn sm" id="manualAdd">Добавить заказ</button>
+        <button class="btn ghost sm" id="sampleBtn">Вставить пример</button>
+      </div>
+      <div id="scanStatus"></div>
+      <div class="hint">Камере нужен HTTPS — на GitHub Pages сработает; при открытии файла напрямую (file://) используйте ручной ввод.</div>
+    </div>
+  </div>
+
+  <div class="orders-section">
+    <div class="section-head">
+      <h2>Активные<span class="count" id="activeCount">0</span></h2>
+    </div>
+    <div class="orders-grid" id="activeOrders"></div>
+  </div>
+
+  <div class="orders-section">
+    <div class="section-head">
+      <h2>Выданы<span class="count" id="doneCount">0</span></h2>
+      <div style="display:flex; gap:10px;">
+        <button class="btn ghost sm" id="exportSalesBtn">⭳ Выгрузить продажи (JSON)</button>
+        <button class="btn ghost sm" id="clearDoneBtn">Очистить доску</button>
+      </div>
+    </div>
+    <div class="hint" style="margin:-8px 0 16px;">«Очистить доску» убирает карточки из этого списка, но не трогает журнал продаж — его переносите в админ-панель кнопкой «Выгрузить продажи» выше.</div>
+    <div class="orders-grid" id="doneOrders"></div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.js"></script>
+<script src="catalog.js"></script>
+<script src="auth.js"></script>
+<script src="sales.js"></script>
+<script>
+NovaAuth.guard(async function () {
+  "use strict";
+
+  document.getElementById("logoutLink").addEventListener("click", function () {
+    NovaAuth.logout();
+    location.reload();
+  });
+
+  var $ = function (s) { return document.querySelector(s); };
+  var $$ = function (s) { return Array.prototype.slice.call(document.querySelectorAll(s)); };
+  var esc = function (s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  };
+
+  var ORDERS_KEY = "nova_operator_orders";
+  var orders = {};
+  var catalog = await NovaCatalog.loadCatalog();
+  var itemsById = {};
+  catalog.products.forEach(function (p) { itemsById[p.id] = p; });
+  catalog.combos.forEach(function (c) { itemsById[c.id] = c; });
+
+  var scanning = false;
+  var lastScan = { text: "", time: 0 };
+  var video = $("#video"), canvas = document.createElement("canvas"), ctx = canvas.getContext("2d");
+
+  function loadOrders() {
+    try { orders = JSON.parse(localStorage.getItem(ORDERS_KEY) || "{}"); } catch (e) { orders = {}; }
+  }
+  function saveOrders() {
+    try { localStorage.setItem(ORDERS_KEY, JSON.stringify(orders)); } catch (e) {}
+  }
+
+  // Разбирает payload из QR, который печатает shop.html:
+  // NOVA|PREORDER|NC-1234|SLOT:14:45|PAY:ONSITE|SUM:16.00BYN|ITEMS:cola-05x2,nachosx1
+  function parsePayload(text) {
+    text = (text || "").trim();
+    if (!/^NOVA\|PREORDER\|/.test(text)) return null;
+    var parts = text.split("|");
+    var no = parts[2] || "";
+    if (!no) return null;
+    var slot = "", sum = "", sumValue = 0, currency = "BYN", items = [];
+    for (var i = 3; i < parts.length; i++) {
+      var p = parts[i];
+      if (p.indexOf("SLOT:") === 0) {
+        slot = p.slice(5);
+      } else if (p.indexOf("SUM:") === 0) {
+        var raw = p.slice(4);
+        var m = raw.match(/^([\d.]+)([A-Za-z]+)$/);
+        sum = m ? (m[1] + " " + m[2]) : raw;
+        sumValue = m ? parseFloat(m[1]) : 0;
+        currency = m ? m[2] : "BYN";
+      } else if (p.indexOf("ITEMS:") === 0) {
+        items = p.slice(6).split(",").filter(Boolean).map(function (pair) {
+          var mm = pair.match(/^(.+)x(\d+)$/);
+          return mm ? { id: mm[1], qty: parseInt(mm[2], 10) } : null;
+        }).filter(Boolean);
+      }
+    }
+    return { no: no, slot: slot, sum: sum, sumValue: sumValue, currency: currency, items: items };
+  }
+
+  function resolveItems(items) {
+    return items.map(function (it) {
+      var ref = itemsById[it.id];
+      return { id: it.id, qty: it.qty, name: ref ? ref.name : it.id, price: ref ? ref.price : 0, known: !!ref };
+    });
+  }
+
+  function fmtTime(iso) {
+    try { return new Date(iso).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }); }
+    catch (e) { return ""; }
+  }
+
+  function setScanStatus(text) { $("#scanStatus").textContent = text; }
+
+  function flashOrder(no, msg) {
+    setScanStatus(msg + ": " + no);
+    var el = $('.order-card[data-no="' + no.replace(/"/g, "") + '"]');
+    if (el) {
+      el.classList.add("flash");
+      setTimeout(function () { el.classList.remove("flash"); }, 900);
+      el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }
+
+  function addOrUpdateOrder(parsed, rawPayload) {
+    var existing = orders[parsed.no];
+    if (existing) {
+      existing.lastScanAt = new Date().toISOString();
+      saveOrders();
+      render();
+      flashOrder(parsed.no, "Уже в списке");
+      return;
+    }
+    orders[parsed.no] = {
+      no: parsed.no, slot: parsed.slot, sum: parsed.sum,
+      sumValue: parsed.sumValue, currency: parsed.currency,
+      items: resolveItems(parsed.items),
+      ready: false, paid: false,
+      rawPayload: rawPayload,
+      scannedAt: new Date().toISOString(),
+      lastScanAt: new Date().toISOString(),
+      completedAt: null
+    };
+    saveOrders();
+    render();
+    flashOrder(parsed.no, "Заказ добавлен");
+  }
+
+  function handleScan(text) {
+    var now = Date.now();
+    if (text === lastScan.text && (now - lastScan.time) < 2500) return;
+    lastScan = { text: text, time: now };
+    var parsed = parsePayload(text);
+    if (!parsed) {
+      setScanStatus("Код не распознан как предзаказ NOVA.");
+      return;
+    }
+    addOrUpdateOrder(parsed, text);
+  }
+
+  function toggleFlag(no, flag) {
+    var o = orders[no];
+    if (!o) return;
+    var becamePaid = flag === "paid" && !o.paid;
+    o[flag] = !o[flag];
+    o.updatedAt = new Date().toISOString();
+    o.completedAt = (o.ready && o.paid) ? (o.completedAt || new Date().toISOString()) : null;
+    if (becamePaid) {
+      NovaSales.appendSale({
+        orderNo: o.no,
+        ts: o.updatedAt,
+        slot: o.slot,
+        items: o.items,
+        total: o.sumValue || 0,
+        currency: o.currency || "BYN"
+      });
+    }
+    saveOrders();
+    render();
+  }
+
+  function removeOrder(no) {
+    if (!confirm("Убрать заказ " + no + " из списка?")) return;
+    delete orders[no];
+    saveOrders();
+    render();
+  }
+
+  function orderCardHtml(o) {
+    var state = (o.ready && o.paid) ? "done" : (o.ready || o.paid) ? "partial" : "new";
+    var stateLabel = state === "done" ? "Выдан" : state === "partial" ? (o.ready ? "Готов · ждёт оплаты" : "Оплачен · готовится") : "Новый заказ";
+    var itemsText = o.items.length
+      ? o.items.map(function (it) { return esc(it.name) + (it.qty > 1 ? " ×" + it.qty : "") + (it.known ? "" : " (?)"); }).join(", ")
+      : "—";
+    return (
+      '<div class="order-card' + (state === "done" ? " done" : "") + '" data-no="' + esc(o.no) + '">' +
+        '<div class="oc-head"><span class="oc-no">' + esc(o.no) + '</span>' + (o.slot ? '<span class="oc-slot">' + esc(o.slot) + '</span>' : '') + '</div>' +
+        '<span class="oc-chip ' + state + '">' + stateLabel + '</span>' +
+        '<div class="oc-items">' + itemsText + '</div>' +
+        '<div class="oc-sum">' + esc(o.sum || "") + '</div>' +
+        '<div class="oc-toggles">' +
+          '<button class="oc-btn' + (o.ready ? ' on' : '') + '" data-act="ready" data-no="' + esc(o.no) + '">' + (o.ready ? "✓ " : "") + 'Заказ готов</button>' +
+          '<button class="oc-btn' + (o.paid ? ' on' : '') + '" data-act="paid" data-no="' + esc(o.no) + '">' + (o.paid ? "✓ " : "") + 'Заказ оплачен</button>' +
+        '</div>' +
+        '<div class="oc-foot"><span class="oc-meta">Отсканирован ' + fmtTime(o.scannedAt) + '</span><span class="oc-remove" data-remove="' + esc(o.no) + '">Убрать</span></div>' +
+      '</div>'
+    );
+  }
+
+  function render() {
+    var list = Object.keys(orders).map(function (k) { return orders[k]; })
+      .sort(function (a, b) { return new Date(b.scannedAt) - new Date(a.scannedAt); });
+    var active = list.filter(function (o) { return !(o.ready && o.paid); });
+    var done = list.filter(function (o) { return o.ready && o.paid; });
+
+    $("#activeCount").textContent = active.length;
+    $("#doneCount").textContent = done.length;
+
+    $("#activeOrders").innerHTML = active.length ? active.map(orderCardHtml).join("") : '<div class="empty-menu">Пока нет активных заказов. Отсканируйте QR гостя или вставьте код вручную.</div>';
+    $("#doneOrders").innerHTML = done.length ? done.map(orderCardHtml).join("") : '<div class="empty-menu">Выданных заказов пока нет.</div>';
+
+    $$('.oc-btn').forEach(function (b) {
+      b.addEventListener("click", function () { toggleFlag(b.dataset.no, b.dataset.act); });
+    });
+    $$('[data-remove]').forEach(function (b) {
+      b.addEventListener("click", function () { removeOrder(b.dataset.remove); });
+    });
+  }
+
+  /* ---------------- Камера ---------------- */
+
+  function startScanner() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setScanStatus("Камера не поддерживается этим браузером — используйте ручной ввод.");
+      return;
+    }
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+      .then(function (stream) {
+        video.srcObject = stream;
+        video.play();
+        scanning = true;
+        $("#camPlaceholder").hidden = true;
+        $("#scanToggle").textContent = "Остановить камеру";
+        requestAnimationFrame(tick);
+      })
+      .catch(function (err) {
+        setScanStatus("Не удалось включить камеру (" + err.message + "). Используйте ручной ввод.");
+      });
+  }
+
+  function stopScanner() {
+    scanning = false;
+    if (video.srcObject) {
+      video.srcObject.getTracks().forEach(function (t) { t.stop(); });
+      video.srcObject = null;
+    }
+    $("#camPlaceholder").hidden = false;
+    $("#scanToggle").textContent = "Включить камеру";
+  }
+
+  function tick() {
+    if (!scanning) return;
+    if (video.readyState === video.HAVE_ENOUGH_DATA && window.jsQR) {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      var frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      var code = window.jsQR(frame.data, frame.width, frame.height, { inversionAttempts: "dontInvert" });
+      if (code && code.data) handleScan(code.data);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  /* ---------------- Пример для теста без камеры ---------------- */
+
+  function buildSamplePayload() {
+    var picks = catalog.products.filter(function (p) { return p.available !== false; }).slice(0, 2);
+    if (!picks.length) picks = catalog.products.slice(0, 2);
+    var itemsPart = picks.map(function (p, i) { return p.id + "x" + (i + 1); }).join(",");
+    var sum = picks.reduce(function (s, p, i) { return s + p.price * (i + 1); }, 0).toFixed(2);
+    var no = "NC-" + (1000 + Math.floor(Math.random() * 9000));
+    return "NOVA|PREORDER|" + no + "|SLOT:demo|PAY:ONSITE|SUM:" + sum + "BYN|ITEMS:" + itemsPart;
+  }
+
+  /* ---------------- Init ---------------- */
+
+  loadOrders();
+  render();
+
+  $("#scanToggle").addEventListener("click", function () { scanning ? stopScanner() : startScanner(); });
+  $("#manualAdd").addEventListener("click", function () {
+    var v = $("#manualCode").value;
+    if (!v.trim()) { setScanStatus("Вставьте текст QR-кода."); return; }
+    handleScan(v);
+    $("#manualCode").value = "";
+  });
+  $("#sampleBtn").addEventListener("click", function () {
+    $("#manualCode").value = buildSamplePayload();
+  });
+  $("#clearDoneBtn").addEventListener("click", function () {
+    if (!confirm("Очистить историю выданных заказов?")) return;
+    Object.keys(orders).forEach(function (no) {
+      if (orders[no].ready && orders[no].paid) delete orders[no];
+    });
+    saveOrders();
+    render();
+  });
+  $("#exportSalesBtn").addEventListener("click", function () {
+    NovaSales.exportLogFile();
+  });
+});
+</script>
+
+</body>
+</html>

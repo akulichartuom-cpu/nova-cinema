@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>NOVA CINEMA — Наполнение каталога</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b0d12; --bg-soft:#12151c; --card:#171a22;
+    --gold:#d4af37; --gold-soft:#e8c766;
+    --text:#f1f0ec; --muted:#9a9ba3;
+    --border:rgba(212,175,55,0.18);
+    --ok:#5bbf8a; --bad:#a93a2c; --bad-soft:#e08a7c;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:'Montserrat', sans-serif; line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.logo,.btn,.eyebrow,.tab{
+    font-family:'Oswald', sans-serif; text-transform:uppercase; letter-spacing:0.06em;
+  }
+  a{color:inherit; text-decoration:none;}
+
+  header{
+    position:sticky; top:0; z-index:50;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 5%;
+    background:rgba(11,13,18,0.92); backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--border);
+  }
+  .logo{font-size:24px; font-weight:700; color:var(--text); display:flex; flex-direction:column; line-height:1;}
+  .logo span{font-size:10px; font-weight:400; letter-spacing:0.4em; color:var(--gold); margin-top:4px;}
+  .back{font-size:13px; color:var(--muted); display:flex; align-items:center; gap:7px; transition:color .2s;}
+  .back:hover{color:var(--gold-soft);}
+  .preview-link{font-size:13px; color:var(--muted); transition:color .2s;}
+  .preview-link:hover{color:var(--gold-soft);}
+  .hdr-links{display:flex; align-items:center; gap:18px;}
+
+  .wrap{max-width:1140px; margin:0 auto; padding:44px 5% 90px;}
+
+  .eyebrow{font-size:12px; color:var(--gold); letter-spacing:0.16em; margin-bottom:12px;}
+  .intro h1{font-size:32px; font-weight:700; margin-bottom:10px;}
+  .intro p{color:var(--muted); font-size:14.5px; max-width:620px;}
+
+  .toolbar{display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:22px 0 14px;}
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:14px 22px; font-size:13px; font-weight:600; border-radius:6px;
+    cursor:pointer; border:1px solid transparent;
+    background:linear-gradient(135deg, var(--gold-soft), var(--gold)); color:#141414;
+    transition:transform .15s, box-shadow .15s, opacity .15s;
+  }
+  .btn:hover{transform:translateY(-2px); box-shadow:0 12px 28px -10px rgba(212,175,55,0.7);}
+  .btn.ghost{background:transparent; color:var(--text); border-color:rgba(255,255,255,0.22);}
+  .btn.ghost:hover{border-color:var(--gold); color:var(--gold-soft); box-shadow:none;}
+  .btn.sm{padding:10px 16px; font-size:11.5px; width:auto;}
+  .btn.file{position:relative; overflow:hidden;}
+  .btn.file input[type=file]{position:absolute; inset:0; opacity:0; cursor:pointer; width:100%;}
+  #saveState{font-size:11.5px; color:var(--muted); margin-left:auto;}
+
+  .callout{
+    font-size:12.5px; color:var(--muted); background:var(--bg-soft);
+    border:1px solid var(--border); border-radius:8px; padding:12px 14px; margin-bottom:34px; max-width:760px;
+  }
+  .callout b{color:var(--text);}
+
+  .tabs{display:flex; gap:0; margin-bottom:24px; border-bottom:1px solid var(--border);}
+  .tab{
+    font-size:13px; padding:10px 0; margin-right:26px; color:var(--muted); cursor:pointer;
+    border-bottom:2px solid transparent; background:none; border-top:none; border-left:none; border-right:none;
+  }
+  .tab.active{color:var(--gold-soft); border-bottom-color:var(--gold);}
+  .count{
+    color:var(--muted); font-weight:400; margin-left:6px; font-family:'Montserrat';
+    text-transform:none; letter-spacing:normal; font-size:11px;
+  }
+
+  .layout{display:grid; grid-template-columns:1fr 380px; gap:34px; align-items:start;}
+  .layout[hidden]{display:none;}
+
+  .list{display:flex; flex-direction:column; gap:10px;}
+  .empty-menu{color:var(--muted); font-size:13px; padding:22px; border:1px dashed var(--border); border-radius:10px; text-align:center;}
+
+  .row{
+    display:grid; grid-template-columns:52px 1fr auto auto; gap:16px; align-items:center;
+    background:var(--card); border:1px solid var(--border); border-radius:10px; padding:14px 16px;
+    transition:opacity .15s;
+  }
+  .row.off{opacity:.55;}
+  .row .ic{
+    width:52px; height:52px; border-radius:9px; font-size:24px;
+    display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(155deg,#2a2140,#0b0d12 78%);
+  }
+  .row h3{font-size:15px; font-weight:600; margin-bottom:3px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+  .row .desc{font-size:12px; color:var(--muted); text-transform:none; letter-spacing:normal; margin-bottom:4px;}
+  .row .meta{font-family:'Oswald'; font-size:12px; color:var(--gold-soft); letter-spacing:0.02em;}
+  .row .meta .sep{color:var(--muted); margin:0 6px;}
+  .chip-off{
+    font-family:'Oswald'; font-size:9px; padding:3px 8px; border-radius:100px;
+    background:rgba(169,58,44,0.16); color:var(--bad-soft); letter-spacing:0.06em;
+  }
+  .chip-warn{
+    font-family:'Oswald'; font-size:9px; padding:3px 8px; border-radius:100px;
+    background:rgba(212,175,55,0.16); color:var(--gold-soft); letter-spacing:0.06em;
+  }
+  .row-actions{display:flex; gap:6px;}
+  .icon-btn{
+    width:32px; height:32px; border-radius:7px; background:var(--bg-soft); border:1px solid var(--border);
+    color:var(--muted); cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center;
+    transition:.15s;
+  }
+  .icon-btn:hover{border-color:var(--gold); color:var(--gold-soft);}
+  .icon-btn.del:hover{border-color:var(--bad); color:var(--bad-soft);}
+
+  .switch{position:relative; width:40px; height:22px; display:inline-block; flex-shrink:0;}
+  .switch input{position:absolute; inset:0; opacity:0; margin:0; cursor:pointer; z-index:2;}
+  .switch .track{position:absolute; inset:0; background:var(--bg-soft); border:1px solid var(--border); border-radius:100px; pointer-events:none; transition:.15s;}
+  .switch .thumb{position:absolute; top:3px; left:3px; width:14px; height:14px; border-radius:50%; background:var(--muted); pointer-events:none; transition:.15s;}
+  .switch input:checked ~ .track{background:rgba(91,191,138,0.18); border-color:var(--ok);}
+  .switch input:checked ~ .thumb{left:21px; background:var(--ok);}
+
+  .editor{
+    background:var(--card); border:1px solid var(--border); border-radius:12px;
+    padding:22px 20px; position:sticky; top:96px; display:flex; flex-direction:column; gap:14px;
+  }
+  .editor h2{font-size:16px; font-weight:600;}
+  .field{display:flex; flex-direction:column; gap:6px;}
+  .field-label{
+    font-family:'Oswald'; text-transform:uppercase; letter-spacing:0.05em; font-size:11.5px; color:var(--muted);
+  }
+  .field input[type=text], .field input[type=number]{
+    font-family:'Montserrat'; font-size:14px; background:var(--bg-soft); border:1px solid var(--border);
+    border-radius:7px; padding:10px 12px; color:var(--text);
+  }
+  .field input:focus{outline:none; border-color:var(--gold);}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  .switch-row{flex-direction:row; align-items:center; justify-content:space-between;}
+  .editor-actions{display:flex; gap:10px;}
+  .editor-actions .btn{width:auto; flex:1;}
+  .form-error{font-size:12px; color:var(--bad-soft);}
+  .hint{font-size:11px; color:var(--muted);}
+
+  .component-picker{
+    display:flex; flex-direction:column; max-height:260px; overflow-y:auto;
+    border:1px solid var(--border); border-radius:8px; padding:2px 10px;
+  }
+  .cp-row{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 0;}
+  .cp-row + .cp-row{border-top:1px solid var(--border);}
+  .cp-name{font-size:13px; color:var(--text);}
+  .cp-name em{color:var(--muted); font-style:normal; font-size:11px;}
+  .stepper{display:flex; align-items:center; gap:8px;}
+  .stepper button{
+    width:26px; height:26px; border-radius:6px; cursor:pointer;
+    background:var(--bg-soft); color:var(--text); border:1px solid var(--border); font-size:14px; line-height:1;
+    display:flex; align-items:center; justify-content:center; transition:border-color .15s, color .15s;
+  }
+  .stepper button:hover{border-color:var(--gold); color:var(--gold-soft);}
+  .stepper .qty{min-width:16px; text-align:center; font-family:'Oswald'; font-size:13px;}
+
+  .seg{display:inline-flex; border:1px solid var(--border); border-radius:7px; overflow:hidden;}
+  .seg-btn{
+    font-family:'Oswald'; font-size:11px; letter-spacing:0.05em; padding:9px 16px;
+    background:var(--bg-soft); color:var(--muted); cursor:pointer; border:none;
+  }
+  .seg-btn.active{background:rgba(212,175,55,0.16); color:var(--gold-soft);}
+  .discount-row{display:grid; grid-template-columns:auto 1fr; gap:14px; align-items:end;}
+
+  .combo-preview{
+    background:var(--bg-soft); border:1px solid var(--border); border-radius:8px;
+    padding:12px 14px; display:flex; flex-direction:column; gap:6px;
+  }
+  .pv-row{display:flex; justify-content:space-between; font-size:12.5px; color:var(--muted);}
+  .pv-row.grand{
+    font-family:'Oswald'; text-transform:uppercase; letter-spacing:0.04em; font-size:14px; color:var(--text);
+    border-top:1px solid var(--border); padding-top:8px; margin-top:2px;
+  }
+  .pv-row.grand b{color:var(--gold-soft);}
+
+  /* Reports */
+  .toolbar input[type=date]{
+    font-family:'Montserrat'; font-size:13px; background:var(--bg-soft); border:1px solid var(--border);
+    border-radius:7px; padding:9px 10px; color:var(--text);
+  }
+  .toolbar input[type=date]:focus{outline:none; border-color:var(--gold);}
+  .report-summary{display:flex; flex-wrap:wrap; gap:14px; margin:22px 0;}
+  .stat-tile{
+    background:var(--card); border:1px solid var(--border); border-radius:10px;
+    padding:16px 20px; min-width:150px;
+  }
+  .stat-tile .v{font-family:'Oswald'; font-size:24px; color:var(--gold-soft); font-variant-numeric:tabular-nums;}
+  .stat-tile .l{font-size:11.5px; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em; font-family:'Oswald'; margin-top:4px;}
+  .report-table-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:10px;}
+  .report-table{width:100%; border-collapse:collapse; font-size:13.5px;}
+  .report-table th, .report-table td{padding:12px 16px; text-align:left; border-bottom:1px solid var(--border);}
+  .report-table th{
+    font-family:'Oswald'; text-transform:uppercase; letter-spacing:0.05em; font-size:11px; color:var(--muted);
+    background:var(--bg-soft);
+  }
+  .report-table td.num, .report-table th.num{text-align:right; font-variant-numeric:tabular-nums;}
+  .report-table tr:last-child td{border-bottom:none;}
+  .report-table tfoot td{font-family:'Oswald'; color:var(--gold-soft); border-top:1px solid var(--border); background:var(--bg-soft);}
+
+  @media (max-width:900px){ .layout{grid-template-columns:1fr;} .editor{position:static;} }
+  @media (max-width:560px){ .row{grid-template-columns:44px 1fr; grid-template-areas:"ic body" "switch actions"; row-gap:10px;}
+    .row .ic{grid-area:ic; width:44px; height:44px;}
+    .row .body{grid-area:body;}
+    .row .switch{grid-area:switch;}
+    .row .row-actions{grid-area:actions; justify-self:end;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="shop.html">← В приложение</a>
+  <div class="logo">NOVA<span>CINEMA</span></div>
+  <div class="hdr-links">
+    <a class="preview-link" href="operator.html">Касса выдачи →</a>
+    <a class="preview-link" href="shop.html" target="_blank" rel="noopener">Предпросмотр →</a>
+    <a class="preview-link" id="logoutLink">Выйти</a>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="intro">
+    <div class="eyebrow">Наполнение каталога · для персонала</div>
+    <h1>Товары бара NOVA</h1>
+    <p>Добавляйте позиции, собирайте комбо-наборы со скидкой и включайте/выключайте наличие. Гости видят только то, что помечено «в наличии» — выключенный товар не удаляется и его можно в любой момент вернуть.</p>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn sm" id="exportBtn">⭳ Скачать products.json</button>
+    <label class="btn ghost sm file">Импортировать JSON
+      <input type="file" id="importInput" accept="application/json">
+    </label>
+    <button class="btn ghost sm" id="resetBtn">Сбросить к демо-набору</button>
+    <span id="saveState"></span>
+  </div>
+
+  <div class="callout">
+    <b>Как это публикуется.</b> Сайт статический — правки сохраняются только в этом браузере (черновик). Чтобы гости увидели новый каталог на <span style="white-space:nowrap">akulichartuom-cpu.github.io/nova-cinema</span>, нажмите «Скачать products.json» и загрузите файл в корень репозитория (заменить существующий).
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="products">Товары <span class="count" id="productCount"></span></button>
+    <button class="tab" data-tab="combos">Комбо-наборы <span class="count" id="comboCount"></span></button>
+    <button class="tab" data-tab="reports">Отчёты</button>
+    <button class="tab" data-tab="access">Доступ</button>
+  </div>
+
+  <!-- PRODUCTS -->
+  <div class="layout" id="productsPane">
+    <div class="list" id="productList"></div>
+
+    <aside class="editor">
+      <h2 id="pfTitle">Новый товар</h2>
+
+      <div class="field"><span class="field-label">Название</span>
+        <input type="text" id="pfName" placeholder="Например, Чипсы сырные">
+      </div>
+      <div class="field"><span class="field-label">Описание</span>
+        <input type="text" id="pfDesc" placeholder="Короткое уточнение: объём, вкус">
+      </div>
+      <div class="row2">
+        <div class="field"><span class="field-label">Цена, BYN</span>
+          <input type="number" id="pfPrice" min="0" step="0.10" placeholder="0.00">
+        </div>
+        <div class="field"><span class="field-label">Сборка, мин</span>
+          <input type="number" id="pfPrep" min="0" step="1" placeholder="0">
+        </div>
+      </div>
+      <div class="field"><span class="field-label">Иконка (эмодзи)</span>
+        <input type="text" id="pfIcon" maxlength="4" placeholder="🍫">
+      </div>
+
+      <div class="field switch-row">
+        <span class="field-label">В наличии</span>
+        <label class="switch">
+          <input type="checkbox" id="pfAvail" checked>
+          <span class="track"></span><span class="thumb"></span>
+        </label>
+      </div>
+
+      <div class="form-error" id="pfError" hidden></div>
+
+      <div class="editor-actions">
+        <button class="btn" id="pfSave">Сохранить</button>
+        <button class="btn ghost" id="pfCancel" hidden>Отмена</button>
+      </div>
+      <div class="hint">Выключенный тумблер скрывает товар у гостей, но не стирает его — данные остаются здесь.</div>
+    </aside>
+  </div>
+
+  <!-- COMBOS -->
+  <div class="layout" id="combosPane" hidden>
+    <div class="list" id="comboList"></div>
+
+    <aside class="editor">
+      <h2 id="cfTitle">Новый комбо-набор</h2>
+
+      <div class="field"><span class="field-label">Название</span>
+        <input type="text" id="cfName" placeholder="Например, Комбо «Вечерний сеанс»">
+      </div>
+      <div class="field"><span class="field-label">Иконка (эмодзи)</span>
+        <input type="text" id="cfIcon" maxlength="4" placeholder="🎬">
+      </div>
+
+      <div class="field"><span class="field-label">Состав</span>
+        <div class="component-picker" id="cfItems"></div>
+      </div>
+
+      <div class="discount-row">
+        <div class="field"><span class="field-label">Скидка в</span>
+          <div class="seg">
+            <button type="button" class="seg-btn active" data-type="amount">BYN</button>
+            <button type="button" class="seg-btn" data-type="percent">%</button>
+          </div>
+        </div>
+        <div class="field"><span class="field-label">Размер скидки</span>
+          <input type="number" id="cfDiscountValue" min="0" step="0.10" placeholder="0.00">
+        </div>
+      </div>
+
+      <div class="combo-preview">
+        <div class="pv-row"><span>Сумма позиций</span><span id="cfBase">0.00 BYN</span></div>
+        <div class="pv-row"><span>Скидка</span><span id="cfDiscount">−0.00 BYN</span></div>
+        <div class="pv-row grand"><span>Итоговая цена</span><b id="cfFinal">0.00 BYN</b></div>
+      </div>
+
+      <div class="field switch-row">
+        <span class="field-label">В наличии</span>
+        <label class="switch">
+          <input type="checkbox" id="cfAvail" checked>
+          <span class="track"></span><span class="thumb"></span>
+        </label>
+      </div>
+
+      <div class="form-error" id="cfError" hidden></div>
+
+      <div class="editor-actions">
+        <button class="btn" id="cfSave">Сохранить</button>
+        <button class="btn ghost" id="cfCancel" hidden>Отмена</button>
+      </div>
+      <div class="hint">Комбо автоматически скрывается у гостей, если хотя бы один компонент выключен из наличия.</div>
+    </aside>
+  </div>
+
+  <!-- REPORTS -->
+  <div class="reports" id="reportsPane" hidden>
+    <div class="callout">
+      <b>Откуда данные.</b> Продажа попадает в отчёт, когда на кассе выдачи (<a href="operator.html" style="text-decoration:underline">operator.html</a>) заказ отмечают «Заказ оплачен». Если эта касса — то же устройство, что и панель наполнения, данные подхватятся сами. Если касса на другом устройстве — выгрузите там файл кнопкой «Выгрузить продажи (JSON)» и загрузите его здесь.
+    </div>
+
+    <div class="toolbar">
+      <div class="field" style="width:auto;"><span class="field-label">Период с</span><input type="date" id="repFrom" style="width:150px;"></div>
+      <div class="field" style="width:auto;"><span class="field-label">по</span><input type="date" id="repTo" style="width:150px;"></div>
+      <button class="btn sm" id="repShowBtn" style="align-self:flex-end;">Показать</button>
+      <label class="btn ghost sm file" style="align-self:flex-end;">Загрузить файл продаж
+        <input type="file" id="repImportInput" accept="application/json" multiple>
+      </label>
+      <button class="btn ghost sm" id="repExportBtn" style="align-self:flex-end;">⭳ Скачать Excel</button>
+    </div>
+
+    <div class="report-summary" id="repSummary"></div>
+
+    <div class="report-table-wrap">
+      <table class="report-table" id="repTable">
+        <thead><tr><th>Товар / комбо</th><th class="num">Продано, шт</th><th class="num">Выручка, BYN</th></tr></thead>
+        <tbody id="repTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ACCESS -->
+  <div class="access" id="accessPane" hidden>
+    <div class="callout">
+      <b>Важно.</b> Это лёгкий заслон от случайных гостей, не настоящая защита: репозиторий публичный, и код проверки виден в исходниках. Не используйте пароль, которым пользуетесь где-то ещё.
+    </div>
+    <aside class="editor" style="max-width:380px;">
+      <h2>Сменить логин и пароль</h2>
+      <div class="field"><span class="field-label">Текущий логин</span><input type="text" id="curUser" disabled></div>
+      <div class="field"><span class="field-label">Новый логин</span><input type="text" id="newUser"></div>
+      <div class="field"><span class="field-label">Новый пароль</span><input type="text" id="newPass" placeholder="минимум 6 символов"></div>
+      <div class="form-error" id="accessError" hidden></div>
+      <div class="editor-actions"><button class="btn" id="accessSave">Сохранить</button></div>
+      <div class="hint">Действует сразу на этом устройстве и в этом браузере. Чтобы новый пароль подхватили другие устройства без повторной настройки — замените хэш по умолчанию в auth.js и обновите сайт.</div>
+    </aside>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="catalog.js"></script>
+<script src="auth.js"></script>
+<script src="sales.js"></script>
+<script>
+NovaAuth.guard(async function () {
+  "use strict";
+
+  document.getElementById("logoutLink").addEventListener("click", function () {
+    NovaAuth.logout();
+    location.reload();
+  });
+
+  var $ = function (s) { return document.querySelector(s); };
+  var $$ = function (s) { return Array.prototype.slice.call(document.querySelectorAll(s)); };
+  var esc = function (s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  };
+
+  var catalog = await NovaCatalog.loadCatalogForEditing();
+  var editingProductId = null;
+  var editingComboId = null;
+  var comboItems = {};          // id -> qty, рабочее состояние формы комбо
+  var comboDiscountType = "amount";
+
+  function productsById() {
+    var m = {};
+    catalog.products.forEach(function (p) { m[p.id] = p; });
+    return m;
+  }
+
+  function setStatus(text) { $("#saveState").textContent = text; }
+
+  function reflow() {
+    catalog = NovaCatalog.enrich(catalog);
+    NovaCatalog.saveDraft(catalog);
+    renderProducts();
+    renderCombos();
+    setStatus("Черновик сохранён · " + new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }));
+  }
+
+  /* ---------------- PRODUCTS ---------------- */
+
+  function renderProducts() {
+    var list = $("#productList");
+    list.innerHTML = "";
+    var onCount = catalog.products.filter(function (p) { return p.available !== false; }).length;
+    $("#productCount").textContent = catalog.products.length + " · видно гостям " + onCount;
+
+    if (!catalog.products.length) {
+      list.innerHTML = '<div class="empty-menu">Товаров пока нет. Добавьте первый справа.</div>';
+      return;
+    }
+
+    catalog.products.forEach(function (p) {
+      var off = p.available === false;
+      var row = document.createElement("div");
+      row.className = "row" + (off ? " off" : "");
+      row.innerHTML =
+        '<div class="ic">' + p.icon + '</div>' +
+        '<div class="body">' +
+          '<h3>' + esc(p.name) + (off ? '<span class="chip-off">Скрыто у гостей</span>' : '') + '</h3>' +
+          '<div class="desc">' + esc(p.desc || "") + '</div>' +
+          '<div class="meta">' + NovaCatalog.money(p.price) + '<span class="sep">·</span>≈' + p.prep + ' мин</div>' +
+        '</div>' +
+        '<label class="switch" title="В наличии">' +
+          '<input type="checkbox" ' + (off ? '' : 'checked') + ' data-avail="' + p.id + '">' +
+          '<span class="track"></span><span class="thumb"></span>' +
+        '</label>' +
+        '<div class="row-actions">' +
+          '<button class="icon-btn edit" data-edit="' + p.id + '" title="Редактировать">✎</button>' +
+          '<button class="icon-btn del" data-del="' + p.id + '" title="Удалить безвозвратно">✕</button>' +
+        '</div>';
+      list.appendChild(row);
+    });
+
+    $$('#productList [data-avail]').forEach(function (cb) {
+      cb.addEventListener("change", function () {
+        var p = catalog.products.filter(function (x) { return x.id === cb.dataset.avail; })[0];
+        if (p) { p.available = cb.checked; reflow(); }
+      });
+    });
+    $$('#productList [data-edit]').forEach(function (b) {
+      b.addEventListener("click", function () { openProductEditor(b.dataset.edit); });
+    });
+    $$('#productList [data-del]').forEach(function (b) {
+      b.addEventListener("click", function () { deleteProduct(b.dataset.del); });
+    });
+  }
+
+  function openProductEditor(id) {
+    var p = catalog.products.filter(function (x) { return x.id === id; })[0];
+    if (!p) return;
+    editingProductId = id;
+    $("#pfTitle").textContent = "Редактирование товара";
+    $("#pfName").value = p.name;
+    $("#pfDesc").value = p.desc || "";
+    $("#pfPrice").value = p.price;
+    $("#pfPrep").value = p.prep;
+    $("#pfIcon").value = p.icon || "";
+    $("#pfAvail").checked = p.available !== false;
+    $("#pfCancel").hidden = false;
+    $("#pfError").hidden = true;
+    setTab("products");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function newProductEditor() {
+    editingProductId = null;
+    $("#pfTitle").textContent = "Новый товар";
+    $("#pfName").value = "";
+    $("#pfDesc").value = "";
+    $("#pfPrice").value = "";
+    $("#pfPrep").value = "";
+    $("#pfIcon").value = "🥤";
+    $("#pfAvail").checked = true;
+    $("#pfCancel").hidden = true;
+    $("#pfError").hidden = true;
+  }
+
+  function saveProduct() {
+    var name = $("#pfName").value.trim();
+    var price = parseFloat($("#pfPrice").value);
+    var prep = parseInt($("#pfPrep").value, 10);
+    var icon = $("#pfIcon").value.trim() || "🍽️";
+    var desc = $("#pfDesc").value.trim();
+    var avail = $("#pfAvail").checked;
+
+    if (!name || isNaN(price) || price < 0 || isNaN(prep) || prep < 0) {
+      $("#pfError").textContent = "Укажите название, цену (≥0) и время сборки (≥0).";
+      $("#pfError").hidden = false;
+      return;
+    }
+
+    if (editingProductId) {
+      var p = catalog.products.filter(function (x) { return x.id === editingProductId; })[0];
+      p.name = name; p.desc = desc; p.price = price; p.prep = prep; p.icon = icon; p.available = avail;
+    } else {
+      catalog.products.push({
+        id: NovaCatalog.newId("p"), name: name, desc: desc,
+        price: price, prep: prep, icon: icon, available: avail
+      });
+    }
+    reflow();
+    newProductEditor();
+  }
+
+  function deleteProduct(id) {
+    var p = catalog.products.filter(function (x) { return x.id === id; })[0];
+    if (!p) return;
+    var usedIn = catalog.combos.filter(function (c) {
+      return c.items.some(function (it) { return it.id === id; });
+    });
+    var warn = usedIn.length
+      ? "\n\nИспользуется в комбо: " + usedIn.map(function (c) { return c.name; }).join(", ") + " — эти комбо автоматически скроются."
+      : "";
+    if (!confirm('Удалить «' + p.name + '» безвозвратно?' + warn +
+      "\n\nЕсли товар временно закончился — лучше выключить тумблер «В наличии», не удаляя.")) return;
+    catalog.products = catalog.products.filter(function (x) { return x.id !== id; });
+    if (editingProductId === id) newProductEditor();
+    reflow();
+  }
+
+  /* ---------------- COMBOS ---------------- */
+
+  function renderCombos() {
+    var list = $("#comboList");
+    list.innerHTML = "";
+    var onCount = catalog.combos.filter(function (c) { return c.effectiveAvailable; }).length;
+    $("#comboCount").textContent = catalog.combos.length + " · видно гостям " + onCount;
+
+    if (!catalog.combos.length) {
+      list.innerHTML = '<div class="empty-menu">Комбо-наборов пока нет. Соберите первый справа из товаров.</div>';
+      return;
+    }
+
+    catalog.combos.forEach(function (c) {
+      var off = c.available === false;
+      var hiddenByStock = !off && !c.effectiveAvailable;
+      var row = document.createElement("div");
+      row.className = "row" + ((off || hiddenByStock) ? " off" : "");
+      var chip = off ? '<span class="chip-off">Скрыто у гостей</span>'
+        : hiddenByStock ? '<span class="chip-warn">Компонент не в наличии</span>' : '';
+      var discountLabel = c.discountType === "percent" ? (c.discountValue + "%") : NovaCatalog.money(c.discountValue);
+      row.innerHTML =
+        '<div class="ic">' + (c.icon || "🎬") + '</div>' +
+        '<div class="body">' +
+          '<h3>' + esc(c.name) + chip + '</h3>' +
+          '<div class="desc">' + esc(c.composition) + '</div>' +
+          '<div class="meta">' + NovaCatalog.money(c.price) +
+            '<span class="sep">·</span>скидка ' + discountLabel +
+            '<span class="sep">·</span>≈' + c.prep + ' мин</div>' +
+        '</div>' +
+        '<label class="switch" title="В наличии">' +
+          '<input type="checkbox" ' + (off ? '' : 'checked') + ' data-avail="' + c.id + '">' +
+          '<span class="track"></span><span class="thumb"></span>' +
+        '</label>' +
+        '<div class="row-actions">' +
+          '<button class="icon-btn edit" data-edit="' + c.id + '" title="Редактировать">✎</button>' +
+          '<button class="icon-btn del" data-del="' + c.id + '" title="Удалить безвозвратно">✕</button>' +
+        '</div>';
+      list.appendChild(row);
+    });
+
+    $$('#comboList [data-avail]').forEach(function (cb) {
+      cb.addEventListener("change", function () {
+        var c = catalog.combos.filter(function (x) { return x.id === cb.dataset.avail; })[0];
+        if (c) { c.available = cb.checked; reflow(); }
+      });
+    });
+    $$('#comboList [data-edit]').forEach(function (b) {
+      b.addEventListener("click", function () { openComboEditor(b.dataset.edit); });
+    });
+    $$('#comboList [data-del]').forEach(function (b) {
+      b.addEventListener("click", function () { deleteCombo(b.dataset.del); });
+    });
+  }
+
+  function renderComponentPicker() {
+    var box = $("#cfItems");
+    box.innerHTML = "";
+    if (!catalog.products.length) {
+      box.innerHTML = '<div class="hint" style="padding:8px 0;">Сначала добавьте товары на вкладке «Товары».</div>';
+      return;
+    }
+    catalog.products.forEach(function (p) {
+      var qty = comboItems[p.id] || 0;
+      var row = document.createElement("div");
+      row.className = "cp-row";
+      row.innerHTML =
+        '<span class="cp-name">' + p.icon + ' ' + esc(p.name) + (p.available === false ? ' <em>(нет в наличии)</em>' : '') + '</span>' +
+        '<div class="stepper" data-id="' + p.id + '">' +
+          '<button type="button" data-d="-1">−</button>' +
+          '<span class="qty">' + qty + '</span>' +
+          '<button type="button" data-d="1">+</button>' +
+        '</div>';
+      box.appendChild(row);
+    });
+    $$('#cfItems .stepper button').forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.parentNode.dataset.id;
+        var d = parseInt(btn.dataset.d, 10);
+        comboItems[id] = Math.max(0, (comboItems[id] || 0) + d);
+        if (comboItems[id] === 0) delete comboItems[id];
+        btn.parentNode.querySelector(".qty").textContent = comboItems[id] || 0;
+        updateComboPreview();
+      });
+    });
+  }
+
+  function comboItemsArray() {
+    return Object.keys(comboItems).map(function (id) { return { id: id, qty: comboItems[id] }; });
+  }
+
+  function updateComboPreview() {
+    var pmap = productsById();
+    var draft = {
+      items: comboItemsArray(),
+      discountType: comboDiscountType,
+      discountValue: parseFloat($("#cfDiscountValue").value) || 0
+    };
+    var base = NovaCatalog.comboBaseSum(draft, pmap);
+    var disc = NovaCatalog.comboDiscountAmount(draft, base);
+    $("#cfBase").textContent = NovaCatalog.money(base);
+    $("#cfDiscount").textContent = "−" + NovaCatalog.money(disc);
+    $("#cfFinal").textContent = NovaCatalog.money(base - disc);
+  }
+
+  function setDiscountType(type) {
+    comboDiscountType = type;
+    $$('.seg-btn').forEach(function (b) { b.classList.toggle("active", b.dataset.type === type); });
+    updateComboPreview();
+  }
+
+  function openComboEditor(id) {
+    var c = catalog.combos.filter(function (x) { return x.id === id; })[0];
+    if (!c) return;
+    editingComboId = id;
+    $("#cfTitle").textContent = "Редактирование комбо";
+    $("#cfName").value = c.name;
+    $("#cfIcon").value = c.icon || "";
+    comboItems = {};
+    c.items.forEach(function (it) { comboItems[it.id] = it.qty; });
+    setDiscountType(c.discountType === "percent" ? "percent" : "amount");
+    $("#cfDiscountValue").value = c.discountValue;
+    $("#cfAvail").checked = c.available !== false;
+    $("#cfCancel").hidden = false;
+    $("#cfError").hidden = true;
+    renderComponentPicker();
+    updateComboPreview();
+    setTab("combos");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function newComboEditor() {
+    editingComboId = null;
+    $("#cfTitle").textContent = "Новый комбо-набор";
+    $("#cfName").value = "";
+    $("#cfIcon").value = "🎬";
+    comboItems = {};
+    setDiscountType("amount");
+    $("#cfDiscountValue").value = "";
+    $("#cfAvail").checked = true;
+    $("#cfCancel").hidden = true;
+    $("#cfError").hidden = true;
+    renderComponentPicker();
+    updateComboPreview();
+  }
+
+  function saveCombo() {
+    var name = $("#cfName").value.trim();
+    var icon = $("#cfIcon").value.trim() || "🎬";
+    var items = comboItemsArray();
+    var discountValue = parseFloat($("#cfDiscountValue").value);
+    var totalQty = items.reduce(function (s, it) { return s + it.qty; }, 0);
+
+    if (!name || totalQty < 2 || isNaN(discountValue) || discountValue < 0) {
+      $("#cfError").textContent = "Укажите название, минимум 2 позиции в составе и скидку (≥0).";
+      $("#cfError").hidden = false;
+      return;
+    }
+
+    if (editingComboId) {
+      var c = catalog.combos.filter(function (x) { return x.id === editingComboId; })[0];
+      c.name = name; c.icon = icon; c.items = items;
+      c.discountType = comboDiscountType; c.discountValue = discountValue;
+      c.available = $("#cfAvail").checked;
+    } else {
+      catalog.combos.push({
+        id: NovaCatalog.newId("combo"), name: name, icon: icon, items: items,
+        discountType: comboDiscountType, discountValue: discountValue,
+        available: $("#cfAvail").checked
+      });
+    }
+    reflow();
+    newComboEditor();
+  }
+
+  function deleteCombo(id) {
+    var c = catalog.combos.filter(function (x) { return x.id === id; })[0];
+    if (!c) return;
+    if (!confirm('Удалить комбо «' + c.name + '» безвозвратно?')) return;
+    catalog.combos = catalog.combos.filter(function (x) { return x.id !== id; });
+    if (editingComboId === id) newComboEditor();
+    reflow();
+  }
+
+  /* ---------------- TABS ---------------- */
+
+  function setTab(tab) {
+    $("#productsPane").hidden = tab !== "products";
+    $("#combosPane").hidden = tab !== "combos";
+    $("#reportsPane").hidden = tab !== "reports";
+    $("#accessPane").hidden = tab !== "access";
+    $$('.tab').forEach(function (b) { b.classList.toggle("active", b.dataset.tab === tab); });
+    if (tab === "reports") renderReport();
+  }
+
+  /* ---------------- EXPORT / IMPORT / RESET ---------------- */
+
+  function exportJson() {
+    var raw = {
+      products: catalog.products,
+      combos: catalog.combos.map(function (c) {
+        return { id: c.id, name: c.name, icon: c.icon, items: c.items, discountType: c.discountType, discountValue: c.discountValue, available: c.available };
+      }),
+      updatedAt: new Date().toISOString()
+    };
+    var blob = new Blob([JSON.stringify(raw, null, 2)], { type: "application/json" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "products.json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+  }
+
+  function importJson(file) {
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var data = JSON.parse(reader.result);
+        if (!NovaCatalog.validateShape(data)) throw new Error("bad shape");
+        catalog = NovaCatalog.enrich(NovaCatalog.clone(data));
+        NovaCatalog.saveDraft(catalog);
+        newProductEditor();
+        newComboEditor();
+        renderProducts();
+        renderCombos();
+        setStatus("Каталог импортирован");
+      } catch (e) {
+        alert("Не получилось прочитать файл: похоже, это не products.json от NOVA.");
+      }
+    };
+    reader.readAsText(file, "utf-8");
+  }
+
+  function resetToDemo() {
+    if (!confirm("Сбросить каталог к демо-набору из 4 товаров? Текущие правки в этом браузере будут потеряны, если вы их не скачали.")) return;
+    catalog = NovaCatalog.enrich(NovaCatalog.clone(NovaCatalog.DEFAULT_CATALOG));
+    NovaCatalog.saveDraft(catalog);
+    newProductEditor();
+    newComboEditor();
+    renderProducts();
+    renderCombos();
+    setStatus("Сброшено к демо-набору");
+  }
+
+  /* ---------------- REPORTS ---------------- */
+
+  function toDateInputValue(d) {
+    var tz = d.getTimezoneOffset() * 60000;
+    return new Date(d - tz).toISOString().slice(0, 10);
+  }
+
+  function defaultReportPeriod() {
+    var to = new Date();
+    var from = new Date();
+    from.setDate(from.getDate() - 6);
+    $("#repFrom").value = toDateInputValue(from);
+    $("#repTo").value = toDateInputValue(to);
+  }
+
+  // Подхватывает продажи, залогированные в этом же браузере кассой выдачи
+  // (если admin.html и operator.html открывают на одном устройстве).
+  function pullSameDeviceLog() {
+    var log = NovaSales.readLog();
+    if (log.length) NovaSales.mergeIntoReport(log);
+  }
+
+  function importSalesFiles(files) {
+    var remaining = files.length;
+    var imported = 0;
+    Array.prototype.forEach.call(files, function (file) {
+      var reader = new FileReader();
+      reader.onload = function () {
+        try {
+          var data = JSON.parse(reader.result);
+          if (Array.isArray(data)) {
+            NovaSales.mergeIntoReport(data);
+            imported++;
+          }
+        } catch (e) {}
+        remaining--;
+        if (remaining === 0) {
+          setStatus("Загружено файлов продаж: " + imported);
+          renderReport();
+        }
+      };
+      reader.readAsText(file, "utf-8");
+    });
+  }
+
+  function renderReport() {
+    pullSameDeviceLog();
+    var all = NovaSales.reportEntries();
+    var from = $("#repFrom").value, to = $("#repTo").value;
+    var period = NovaSales.filterByPeriod(all, from, to);
+    var agg = NovaSales.aggregateByItem(period);
+
+    $("#repSummary").innerHTML =
+      '<div class="stat-tile"><div class="v">' + agg.totals.orders + '</div><div class="l">Оплаченных заказов</div></div>' +
+      '<div class="stat-tile"><div class="v">' + NovaCatalog.money(agg.totals.revenue) + '</div><div class="l">Выручка за период</div></div>' +
+      '<div class="stat-tile"><div class="v">' + agg.rows.length + '</div><div class="l">Позиций в продаже</div></div>';
+
+    var body = $("#repTableBody");
+    if (!agg.rows.length) {
+      body.innerHTML = '<tr><td colspan="3"><div class="empty-menu" style="border:none;">Нет данных за выбранный период. Оплатите заказ на кассе выдачи или загрузите файл продаж.</div></td></tr>';
+    } else {
+      body.innerHTML = agg.rows.map(function (r) {
+        return '<tr><td>' + esc(r.name || r.id) + '</td><td class="num">' + r.qty + '</td><td class="num">' + NovaCatalog.round2(r.revenue).toFixed(2) + '</td></tr>';
+      }).join("");
+    }
+    var tfoot = $("#repTable").querySelector("tfoot");
+    if (tfoot) tfoot.remove();
+    if (agg.rows.length) {
+      var tf = document.createElement("tfoot");
+      var totalQty = agg.rows.reduce(function (s, r) { return s + r.qty; }, 0);
+      tf.innerHTML = '<tr><td>Итого</td><td class="num">' + totalQty + '</td><td class="num">' + NovaCatalog.round2(agg.totals.revenue).toFixed(2) + '</td></tr>';
+      $("#repTable").appendChild(tf);
+    }
+
+    $("#repExportBtn").dataset.rows = JSON.stringify(agg.rows);
+    $("#repExportBtn").dataset.totals = JSON.stringify(agg.totals);
+  }
+
+  function exportReportXlsx() {
+    var rows = JSON.parse($("#repExportBtn").dataset.rows || "[]");
+    var totals = JSON.parse($("#repExportBtn").dataset.totals || '{"orders":0,"revenue":0}');
+    var from = $("#repFrom").value, to = $("#repTo").value;
+    var totalQty = rows.reduce(function (s, r) { return s + r.qty; }, 0);
+
+    var aoa = [
+      ["NOVA CINEMA — Отчёт о реализации бара"],
+      ["Период: " + from + " — " + to],
+      ["Сформирован: " + new Date().toLocaleString("ru-RU")],
+      ["Заказов: " + totals.orders],
+      [],
+      ["Товар / комбо", "Продано, шт", "Выручка, BYN"]
+    ];
+    rows.forEach(function (r) { aoa.push([r.name || r.id, r.qty, NovaCatalog.round2(r.revenue)]); });
+    aoa.push([]);
+    aoa.push(["Итого", totalQty, NovaCatalog.round2(totals.revenue)]);
+
+    var filename = "nova-report-" + from + "_" + to + ".xlsx";
+
+    if (window.XLSX) {
+      var ws = XLSX.utils.aoa_to_sheet(aoa);
+      ws["!cols"] = [{ wch: 32 }, { wch: 14 }, { wch: 14 }];
+      var wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Отчёт");
+      XLSX.writeFile(wb, filename);
+    } else {
+      var csv = aoa.map(function (r) {
+        return r.map(function (cell) {
+          var s = String(cell == null ? "" : cell);
+          return /[",;\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+        }).join(";");
+      }).join("\r\n");
+      var blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = filename.replace(/\.xlsx$/, ".csv");
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+    }
+  }
+
+  /* ---------------- ACCESS ---------------- */
+
+  function initAccessForm() {
+    $("#curUser").value = NovaAuth.currentUsername();
+  }
+
+  function saveAccess() {
+    var newUser = $("#newUser").value.trim();
+    var newPass = $("#newPass").value;
+    if (!newUser || newPass.length < 6) {
+      $("#accessError").textContent = "Укажите логин и пароль не короче 6 символов.";
+      $("#accessError").hidden = false;
+      return;
+    }
+    NovaAuth.changePassword(newUser, newPass).then(function () {
+      $("#accessError").hidden = true;
+      $("#newUser").value = ""; $("#newPass").value = "";
+      initAccessForm();
+      alert("Логин и пароль обновлены на этом устройстве. При следующем входе используйте новые данные.");
+    });
+  }
+
+  /* ---------------- INIT ---------------- */
+
+  $$('.tab').forEach(function (b) { b.addEventListener("click", function () { setTab(b.dataset.tab); }); });
+  $("#pfSave").addEventListener("click", saveProduct);
+  $("#pfCancel").addEventListener("click", newProductEditor);
+  $("#cfSave").addEventListener("click", saveCombo);
+  $("#cfCancel").addEventListener("click", newComboEditor);
+  $$('.seg-btn').forEach(function (b) { b.addEventListener("click", function () { setDiscountType(b.dataset.type); }); });
+  $("#cfDiscountValue").addEventListener("input", updateComboPreview);
+  $("#exportBtn").addEventListener("click", exportJson);
+  $("#importInput").addEventListener("change", function () {
+    if (this.files[0]) importJson(this.files[0]);
+    this.value = "";
+  });
+  $("#resetBtn").addEventListener("click", resetToDemo);
+
+  $("#repShowBtn").addEventListener("click", renderReport);
+  $("#repExportBtn").addEventListener("click", exportReportXlsx);
+  $("#repImportInput").addEventListener("change", function () {
+    if (this.files.length) importSalesFiles(this.files);
+    this.value = "";
+  });
+  $("#accessSave").addEventListener("click", saveAccess);
+
+  newProductEditor();
+  newComboEditor();
+  defaultReportPeriod();
+  initAccessForm();
+  renderProducts();
+  renderCombos();
+  setStatus("Каталог загружен");
+});
+</script>
+
+</body>
+</html>
